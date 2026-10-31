@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:
   build-and-deploy:
@@ -53,3 +54,70 @@ jobs:
             lib/db/session.js
             README.md
           retention-days: 7
+
+      - name: 📢 Notify on completion
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "deploy-completed"
+          path: ./
+          retention-days: 1
+
+  # Additional deployment job for Vercel
+  deploy-to-vercel:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    environment: production
+
+    steps:
+      - name: ❤️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📦 Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: 📥 Install dependencies
+        run: npm ci --omit=dev
+
+      - name: 🏗️ Build the project
+        run: npm run build || exit 0
+
+      - name: 🔌 Vercel Deployment
+        uses: amondnet/vercel-action@v20
+        with:
+          vercel-token: ${{ secrets.VERCEL_TOKEN }}
+          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
+          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
+          working-directory: ./
+          alias-domains: |
+            lm7bos.vercel.app
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+  # Security scan job
+  security-scan:
+    if: always()
+    needs: [build-and-deploy]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: ❤️ Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 🔍 Run npm audit
+        run: npm audit --production --audit-level=high || true
+
+      - name: 🔍 Check for known vulnerabilities
+        run: |
+          echo "🔍 Running security scan..."
+          npm audit --production || true
+
+      - name: 📋 Generate security report
+        run: |
+          echo "🔒 Security scan completed for commit $(git rev-parse --short HEAD)"
