@@ -23,7 +23,12 @@ jobs:
           node-version: '22.x'
 
       - name: 📥 Install dependencies
-        run: npm ci --omit=dev
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --omit=dev || npm install --omit=dev --no-audit
+          else
+            npm install --omit=dev --no-audit
+          fi
 
       - name: 🏗️ Run unit tests
         run: npm test || echo "No test file found, skipping..."
@@ -33,7 +38,7 @@ jobs:
           echo "🧪 Unit tests completed for commit $(git rev-parse --short HEAD)"
           echo "📋 Branch: $GITHUB_REF_NAME"
 
-  - name: 🔍 Run linting
+  lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
@@ -47,7 +52,12 @@ jobs:
           node-version: '22.x'
 
       - name: 📥 Install dependencies
-        run: npm ci --omit=dev
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --omit=dev || npm install --omit=dev --no-audit
+          else
+            npm install --omit=dev --no-audit
+          fi
 
       - name: 🔍 Run eslint
         run: npm run lint || echo "No eslint config, skipping..."
@@ -56,7 +66,6 @@ jobs:
         run: |
           echo "🔍 Linting completed for commit $(git rev-parse --short HEAD)"
 
-  # Type check job
   type-check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -71,7 +80,12 @@ jobs:
           node-version: '22.x'
 
       - name: 📥 Install dependencies
-        run: npm ci --omit=dev
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci --omit=dev || npm install --omit=dev --no-audit
+          else
+            npm install --omit=dev --no-audit
+          fi
 
       - name: 🏗️ Run type check
         run: npm run type-check || echo "No type check config, skipping..."
