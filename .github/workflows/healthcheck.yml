@@ -24,11 +24,14 @@ jobs:
             echo "✅ Dashboard is online and healthy!"
           fi
 
-      - name: 📡 Check API Info Endpoint
+      - name: 📡 Check API & Pairing Service
         run: |
-          echo "🔍 Pinging /api/info..."
-          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}\nLATENCY:%{time_total}s" "https://lm7bos.vercel.app/api/info")
-          echo "$RESPONSE"
+          echo "🔍 Checking API status..."
+          PAIR_STATUS=$(curl -s -X POST -H "Content-Type: application/json" -d '{"number":"1234567890"}' -o /dev/null -w "%{http_code}" "https://lm7bos.vercel.app/api/pair")
+          echo "Pairing API Status Code: $PAIR_STATUS"
+          if [ "$PAIR_STATUS" -eq 200 ]; then
+            echo "✅ Pairing service is operating normally!"
+          fi
 
       - name: 🤖 Summary Report
         run: |
