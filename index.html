@@ -72,7 +72,7 @@
       <!-- Nav Tabs -->
       <nav class="hidden md:flex items-center gap-1 text-sm text-zinc-400">
         <button onclick="switchTab('pairing')" class="tab-btn active px-3.5 py-1.5 rounded-lg text-white font-medium hover:text-white transition" data-tab="pairing">
-          🔑 Pairing Code
+          🔑 Session
         </button>
         <button onclick="switchTab('deploy')" class="tab-btn px-3.5 py-1.5 rounded-lg hover:text-white transition" data-tab="deploy">
           🚀 1-Click Deploy
@@ -116,92 +116,241 @@
 
     <!-- Mobile Navigation Selector -->
     <div class="md:hidden mb-6 flex overflow-x-auto gap-2 pb-2">
-      <button onclick="switchTab('pairing')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="pairing">🔑 Pairing</button>
+      <button onclick="switchTab('pairing')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="pairing">🔑 Session</button>
       <button onclick="switchTab('deploy')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="deploy">🚀 Deploy</button>
       <button onclick="switchTab('config')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="config">⚙️ Config</button>
       <button onclick="switchTab('plugins')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="plugins">🧩 Plugins</button>
       <button onclick="switchTab('api')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="api">📡 API</button>
     </div>
 
-    <!-- TAB 1: PAIRING CODE -->
+    <!-- TAB 1: SESSION / LINK A DEVICE -->
     <section id="tab-pairing" class="tab-content block">
-      <div class="glow-box rounded-2xl p-6 md:p-8 max-w-2xl mx-auto shadow-2xl">
-        <div class="flex items-center justify-between mb-6">
-          <div>
-            <h2 class="text-xl font-bold text-white flex items-center gap-2">
-              <span>📱</span> WhatsApp Device Pairing
-            </h2>
-            <p class="text-xs text-zinc-400 mt-1">Link your WhatsApp without scanning QR codes — fast, secure, and multi-device compatible.</p>
-          </div>
-          <span class="text-xs px-2.5 py-1 rounded-md bg-red-950 text-red-400 border border-red-800 font-mono">
-            Baileys v6.7
-          </span>
+      <div class="rounded-2xl p-6 md:p-8 max-w-xl mx-auto shadow-2xl bg-zinc-900/90 border border-zinc-800">
+        
+        <!-- Header -->
+        <div class="text-center mb-6">
+          <h2 class="text-3xl font-extrabold text-white mb-2">Link a device</h2>
+          <p class="text-sm text-zinc-400">Choose your preferred method to link your device.</p>
         </div>
 
-        <!-- Phone Input Form -->
-        <div class="space-y-4">
-          <div>
-            <label class="block text-xs font-medium text-zinc-300 mb-1.5">
-              WhatsApp Phone Number <span class="text-zinc-500 font-normal">(with Country Code, no + or spaces)</span>
-            </label>
-            <div class="relative">
-              <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-500 font-mono text-sm">+</span>
-              <input 
-                id="phone-input" 
-                type="tel" 
-                placeholder="212612345678" 
-                class="w-full bg-zinc-900 border border-zinc-700/80 rounded-xl pl-8 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 font-mono"
-              />
+        <!-- Options Section -->
+        <div class="space-y-3 mb-6">
+          <!-- Use Custom Session ID -->
+          <div onclick="toggleCustomSession()" class="flex items-center gap-3 cursor-pointer select-none group">
+            <div id="chk-custom-session" class="w-5 h-5 rounded border border-zinc-600 bg-zinc-950 flex items-center justify-center transition group-hover:border-zinc-400">
             </div>
-            <p class="text-[11px] text-zinc-500 mt-1">Example: Morocco: 2126XXXXXXXX | USA: 1415XXXXXXX | India: 9198XXXXXXXX</p>
+            <span class="text-sm font-medium text-zinc-300 group-hover:text-white transition">
+              Use Custom Session ID
+            </span>
           </div>
 
+          <!-- Custom Session Input (hidden by default) -->
+          <div id="custom-session-box" class="hidden ml-8 space-y-1">
+            <div class="flex items-center rounded-xl bg-zinc-950 border border-zinc-700 overflow-hidden focus-within:border-red-500 transition">
+              <span class="px-3 text-xs font-mono text-zinc-500 bg-zinc-900/60 py-2.5 border-r border-zinc-800">
+                lm7bos_
+              </span>
+              <input 
+                id="session-name-input"
+                type="text" 
+                placeholder="adam" 
+                oninput="updateSessionPreview()"
+                class="bg-transparent text-xs text-white font-mono px-3 py-2 w-full focus:outline-none"
+              />
+            </div>
+            <p class="text-[11px] text-zinc-500">
+              Result: <code id="session-preview" class="text-red-400 font-mono">lm7bos_adam</code>
+            </p>
+          </div>
+
+          <!-- Receive Session on WhatsApp -->
+          <div onclick="toggleReceiveWA()" class="flex items-center gap-3 cursor-pointer select-none group">
+            <div id="chk-receive-wa" class="w-5 h-5 rounded border border-zinc-600 bg-zinc-950 flex items-center justify-center transition group-hover:border-zinc-400">
+            </div>
+            <span class="text-sm font-medium text-zinc-300 group-hover:text-white transition">
+              Receive Session on WhatsApp
+            </span>
+          </div>
+        </div>
+
+        <!-- Select Connection Method Divider -->
+        <div class="relative my-6 text-center">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-zinc-800"></div>
+          </div>
+          <div class="relative">
+            <span class="bg-zinc-900 px-3 text-[11px] uppercase tracking-wider font-mono text-zinc-500">
+              Select Connection Method
+            </span>
+          </div>
+        </div>
+
+        <!-- Cards Grid: QR Code vs Pairing Code -->
+        <div class="grid grid-cols-2 gap-3 mb-6">
           <button 
-            id="pair-btn" 
-            onclick="requestPairingCode()" 
-            class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-500 to-red-500 hover:from-red-400 hover:to-red-400 text-black font-semibold text-sm transition shadow-lg shadow-red-500/20 flex items-center justify-center gap-2"
+            id="method-qr"
+            onclick="selectMethod('qr')"
+            class="p-4 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-left transition flex items-center gap-3"
           >
-            <span id="btn-spinner" class="hidden w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
-            <span id="btn-text">❤️‍🔥 Get WhatsApp Pairing Code</span>
+            <div class="text-2xl text-zinc-400">
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm">QR Code</h3>
+              <p class="text-[11px] text-zinc-500">Scan with WhatsApp</p>
+            </div>
+          </button>
+
+          <button 
+            id="method-pair"
+            onclick="selectMethod('pair')"
+            class="p-4 rounded-xl border border-red-500/80 bg-red-950/20 shadow-md shadow-red-950/40 text-left transition flex items-center gap-3"
+          >
+            <div class="text-2xl text-red-400">
+              <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+                <line x1="12" y1="18" x2="12" y2="18.01"></line>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm">Pairing Code</h3>
+              <p class="text-[11px] text-zinc-500">Use Phone Number</p>
+            </div>
           </button>
         </div>
 
-        <!-- Result Box (Hidden by default) -->
-        <div id="pair-result" class="hidden mt-6 pt-6 border-t border-zinc-800">
-          <div class="text-center">
-            <p class="text-xs text-red-400 uppercase tracking-wider font-mono mb-2">✅ Real WhatsApp 8-Digit Pairing Code</p>
-            <div class="flex items-center justify-center gap-3">
-              <div id="code-display" class="font-mono text-3xl md:text-4xl font-extrabold tracking-widest text-red-400 bg-zinc-900 px-6 py-3 rounded-xl border border-red-800/80 select-all">
-                ---- ----
-              </div>
-              <button onclick="copyCode()" class="p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white transition" title="Copy Code">
-                📋
-              </button>
+        <!-- QR Panel -->
+        <div id="panel-qr" class="hidden">
+          <div class="text-center py-6 space-y-4">
+            <div class="w-16 h-16 mx-auto rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-center text-3xl">
+              🖥️
             </div>
-            <p id="code-msg" class="text-xs text-red-400 mt-3 font-medium">Enter this code in WhatsApp within 2 minutes!</p>
-            <p class="text-[11px] text-zinc-500 mt-1">⏱ Code expires in ~2 minutes. Click the button again if it expires.</p>
+            <div>
+              <h3 class="font-bold text-white text-base">Terminal QR Scan (Local PC / VPS)</h3>
+              <p class="text-xs text-zinc-400 mt-1 max-w-sm mx-auto">
+                Run the bot directly on your PC, VPS, or cloud terminal without setting a phone number:
+              </p>
+            </div>
+            <div class="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-left font-mono text-xs text-red-300 max-w-md mx-auto">
+              <p class="text-zinc-500"># 1. Start the bot</p>
+              <p class="text-white">npm start</p>
+              <p class="text-zinc-500 mt-2"># 2. WhatsApp ASCII QR code is rendered live in terminal</p>
+              <p class="text-zinc-500"># 3. Scan with WhatsApp &rarr; Linked Devices &rarr; Link a Device</p>
+            </div>
+            <p class="text-[11px] text-zinc-500">
+              💡 Once connected, your permanent <code class="text-red-400 font-mono">SESSION_ID</code> is printed in the terminal for future 24/7 cloud deploys!
+            </p>
+          </div>
+        </div>
+
+        <!-- Pairing Code Form Panel -->
+        <div id="panel-pair" class="block">
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-zinc-300 mb-1.5">
+                WhatsApp Phone Number <span class="text-zinc-500 font-normal">(with Country Code, no + or spaces)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-zinc-500 font-mono text-sm">+</span>
+                <input 
+                  id="phone-input" 
+                  type="tel" 
+                  placeholder="212612345678" 
+                  class="w-full bg-zinc-950 border border-zinc-700/80 rounded-xl pl-8 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 font-mono"
+                />
+              </div>
+              <p class="text-[11px] text-zinc-500 mt-1">Example: Morocco: 2126XXXXXXXX | Egypt: 201XXXXXXXXX | USA: 1XXXXXXXXXX</p>
+            </div>
+
+            <button 
+              id="pair-btn" 
+              onclick="requestPairingCode()" 
+              class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold text-sm transition shadow-lg shadow-red-600/30 flex items-center justify-center gap-2"
+            >
+              <span id="btn-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span id="btn-text">⚡ Get WhatsApp Session Code</span>
+            </button>
           </div>
 
-          <!-- Instructions Card -->
-          <div class="mt-6 bg-red-950/20 rounded-xl p-4 border border-red-800/40 text-xs space-y-2 text-zinc-300">
-            <div class="font-semibold text-white mb-1">📖 How to pair:</div>
-            <div class="flex items-start gap-2">
-              <span class="text-red-400 font-bold">1.</span> Open WhatsApp on your phone & tap <strong class="text-white">Settings</strong> (or 3 dots).
+          <!-- Result Box (Hidden by default) -->
+          <div id="pair-result" class="hidden mt-6 pt-6 border-t border-zinc-800 space-y-4">
+            <!-- Generated Session ID -->
+            <div id="session-box" class="bg-zinc-950 border border-red-900/40 rounded-xl p-4">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-xs font-mono font-semibold text-red-400">🔑 Generated SESSION_ID:</span>
+                <button 
+                  onclick="copySessionId()" 
+                  class="text-[11px] px-2.5 py-1 bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 rounded-lg transition"
+                >
+                  📋 Copy Session ID
+                </button>
+              </div>
+              <code id="session-display" class="block p-2 bg-black/60 border border-zinc-800 rounded-lg text-xs font-mono text-red-300 break-all select-all">
+                lm7bos_...
+              </code>
+              <p class="text-[11px] text-zinc-500 mt-2">
+                Save this to your <code class="text-zinc-400 font-mono">config.env</code> under <code class="text-zinc-400 font-mono">SESSION_ID</code>!
+              </p>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-red-400 font-bold">2.</span> Tap <strong class="text-white">Linked Devices</strong> &rarr; <strong class="text-white">Link a Device</strong>.
+
+            <!-- 8-Digit Pairing Code Display -->
+            <div class="text-center pt-2">
+              <p class="text-xs text-zinc-400 uppercase tracking-wider font-mono mb-2">✅ Real WhatsApp 8-Digit Pairing Code</p>
+              <div class="flex items-center justify-center gap-3">
+                <div id="code-display" class="font-mono text-3xl md:text-4xl font-extrabold tracking-widest text-red-400 bg-zinc-950 px-6 py-3 rounded-xl border border-red-800 select-all">
+                  ---- ----
+                </div>
+                <button onclick="copyCode()" class="p-3 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white transition" title="Copy Code">
+                  📋
+                </button>
+              </div>
+              <p id="code-msg" class="text-xs text-red-400 mt-3 font-medium">Enter this code in WhatsApp within 2 minutes!</p>
+              <p class="text-[11px] text-zinc-500 mt-1">⏱ Code expires in ~2 minutes. Click the button again if it expires.</p>
             </div>
-            <div class="flex items-start gap-2">
-              <span class="text-red-400 font-bold">3.</span> Tap <strong class="text-white">Link with phone number instead</strong> at the bottom.
-            </div>
-            <div class="flex items-start gap-2">
-              <span class="text-red-400 font-bold">4.</span> Enter the 8-digit code shown above. Done!
+
+            <!-- Instructions Card -->
+            <div class="mt-4 bg-red-950/20 rounded-xl p-4 border border-red-800/40 text-xs space-y-2 text-zinc-300">
+              <div class="font-semibold text-white mb-1">📖 How to pair:</div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 font-bold">1.</span> Open WhatsApp on your phone & tap <strong class="text-white">Settings</strong> (or 3 dots).
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 font-bold">2.</span> Tap <strong class="text-white">Linked Devices</strong> &rarr; <strong class="text-white">Link a Device</strong>.
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 font-bold">3.</span> Tap <strong class="text-white">Link with phone number instead</strong> at the bottom.
+              </div>
+              <div class="flex items-start gap-2">
+                <span class="text-red-400 font-bold">4.</span> Enter the 8-digit code shown above. Done!
+              </div>
             </div>
           </div>
         </div>
+
+        <!-- Warning Banners (matching screenshot) -->
+        <div class="mt-8 space-y-3">
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-red-950/30 border border-red-900/40 text-red-400/90 text-xs">
+            <div class="w-5 h-5 rounded-full border border-red-500 flex items-center justify-center font-bold text-[10px] shrink-0">
+              !
+            </div>
+            <span>You will not receive the session ID on WhatsApp, so copy it from here.</span>
+          </div>
+
+          <div class="flex items-center gap-3 p-3.5 rounded-xl bg-amber-950/30 border border-amber-900/40 text-amber-400/90 text-xs">
+            <div class="w-5 h-5 rounded-full border border-amber-500 flex items-center justify-center font-bold text-[10px] shrink-0">
+              i
+            </div>
+            <span>If connection fails, try using a VPN.</span>
+          </div>
+        </div>
+
       </div>
     </section>
-
     <!-- TAB 2: 1-CLICK DEPLOY -->
     <section id="tab-deploy" class="tab-content hidden">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -479,14 +628,86 @@
 
   <!-- App Script -->
   <script>
+    let customSessionActive = false;
+    let receiveWAActive = false;
+    let selectedMethod = 'pair';
+    let currentSessionId = '';
+
+    function toggleCustomSession() {
+      customSessionActive = !customSessionActive;
+      const chk = document.getElementById('chk-custom-session');
+      const box = document.getElementById('custom-session-box');
+      if (customSessionActive) {
+        chk.innerHTML = '<span class="text-red-400 text-xs font-bold">✓</span>';
+        chk.className = 'w-5 h-5 rounded border border-red-500 bg-red-950/60 flex items-center justify-center transition';
+        box.classList.remove('hidden');
+      } else {
+        chk.innerHTML = '';
+        chk.className = 'w-5 h-5 rounded border border-zinc-600 bg-zinc-950 flex items-center justify-center transition';
+        box.classList.add('hidden');
+      }
+    }
+
+    function updateSessionPreview() {
+      const val = document.getElementById('session-name-input').value.trim().replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() || 'adam';
+      document.getElementById('session-preview').innerText = 'lm7bos_' + val;
+    }
+
+    function toggleReceiveWA() {
+      receiveWAActive = !receiveWAActive;
+      const chk = document.getElementById('chk-receive-wa');
+      if (receiveWAActive) {
+        chk.innerHTML = '<span class="text-red-400 text-xs font-bold">✓</span>';
+        chk.className = 'w-5 h-5 rounded border border-red-500 bg-red-950/60 flex items-center justify-center transition';
+      } else {
+        chk.innerHTML = '';
+        chk.className = 'w-5 h-5 rounded border border-zinc-600 bg-zinc-950 flex items-center justify-center transition';
+      }
+    }
+
+    function selectMethod(method) {
+      selectedMethod = method;
+      const qrBtn = document.getElementById('method-qr');
+      const pairBtn = document.getElementById('method-pair');
+      const qrPanel = document.getElementById('panel-qr');
+      const pairPanel = document.getElementById('panel-pair');
+
+      if (method === 'qr') {
+        qrBtn.className = 'p-4 rounded-xl border border-red-500/80 bg-red-950/20 shadow-md shadow-red-950/40 text-left transition flex items-center gap-3';
+        qrBtn.querySelector('div').className = 'text-2xl text-red-400';
+        pairBtn.className = 'p-4 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-left transition flex items-center gap-3';
+        pairBtn.querySelector('div').className = 'text-2xl text-zinc-400';
+        qrPanel.classList.remove('hidden');
+        pairPanel.classList.add('hidden');
+      } else {
+        pairBtn.className = 'p-4 rounded-xl border border-red-500/80 bg-red-950/20 shadow-md shadow-red-950/40 text-left transition flex items-center gap-3';
+        pairBtn.querySelector('div').className = 'text-2xl text-red-400';
+        qrBtn.className = 'p-4 rounded-xl border border-zinc-800 bg-zinc-950/60 hover:border-zinc-700 text-left transition flex items-center gap-3';
+        qrBtn.querySelector('div').className = 'text-2xl text-zinc-400';
+        pairPanel.classList.remove('hidden');
+        qrPanel.classList.add('hidden');
+      }
+    }
+
+    function getSessionId() {
+      if (customSessionActive) {
+        const inputVal = document.getElementById('session-name-input').value.trim().replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
+        if (inputVal) return 'lm7bos_' + inputVal;
+      }
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let rand = '';
+      for (let i = 0; i < 10; i++) rand += chars.charAt(Math.floor(Math.random() * chars.length));
+      return 'lm7bos_' + rand;
+    }
+
     function switchTab(tabId) {
       document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('text-white', 'bg-red-600', 'border-red-500'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('text-white', 'bg-red-950', 'border-red-800'));
       
       const target = document.getElementById('tab-' + tabId);
       if (target) target.classList.remove('hidden');
 
-      document.querySelectorAll(`[data-tab="${tabId}"]`).forEach(btn => {
+      document.querySelectorAll('[data-tab="' + tabId + '"]').forEach(btn => {
         btn.classList.add('text-white');
       });
     }
@@ -494,7 +715,6 @@
     async function requestPairingCode() {
       const input = document.getElementById('phone-input');
       const number = input.value.trim().replace(/[^0-9]/g, '');
-      const sessionName = document.getElementById('cfg-session')?.value?.trim() || null;
 
       if (!number || number.length < 9) {
         alert('Please enter a valid phone number with country code (e.g. 212612345678)');
@@ -504,6 +724,7 @@
       const btn = document.getElementById('pair-btn');
       const spinner = document.getElementById('btn-spinner');
       const text = document.getElementById('btn-text');
+      const targetSessionId = getSessionId();
 
       btn.disabled = true;
       spinner.classList.remove('hidden');
@@ -513,45 +734,43 @@
         const res = await fetch('/api/pair', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ number, sessionName })
+          body: JSON.stringify({ number, sessionId: targetSessionId })
         });
 
         const data = await res.json();
         btn.disabled = false;
         spinner.classList.add('hidden');
-        text.innerText = '❤️‍🔥 Get WhatsApp Pairing Code';
+        text.innerText = '⚡ Get WhatsApp Session Code';
 
         if (data.ok && data.code) {
+          const finalSessionId = data.sessionId || targetSessionId;
+          currentSessionId = finalSessionId;
           document.getElementById('pair-result').classList.remove('hidden');
+          document.getElementById('session-display').innerText = finalSessionId;
           document.getElementById('code-display').innerText = data.code;
           document.getElementById('code-msg').innerText = data.message || 'Enter code in WhatsApp -> Linked Devices!';
-
-          if (data.sessionId) {
-            document.getElementById('cfg-session').value = data.sessionId;
+          
+          if (document.getElementById('cfg-session')) {
+            document.getElementById('cfg-session').value = finalSessionId;
             updateEnvPreview();
           }
         } else {
-          showCloudPairingGuide(number);
+          showCloudPairingGuide(number, targetSessionId);
         }
       } catch (e) {
         btn.disabled = false;
         spinner.classList.add('hidden');
-        text.innerText = '❤️‍🔥 Get WhatsApp Pairing Code';
-        showCloudPairingGuide(number);
+        text.innerText = '⚡ Get WhatsApp Session Code';
+        showCloudPairingGuide(number, targetSessionId);
       }
     }
 
-    function showCloudPairingGuide(number) {
+    function showCloudPairingGuide(number, sessionId) {
+      currentSessionId = sessionId;
       document.getElementById('pair-result').classList.remove('hidden');
+      document.getElementById('session-display').innerText = sessionId;
       document.getElementById('code-display').innerText = 'PAIR_NUMBER';
-      document.getElementById('code-msg').innerText = `Set PAIR_NUMBER=${number} in your Render/Koyeb environment variables. Your 8-digit code will appear in the live logs!`;
-    }
-
-    function copyPairVar() {
-      const input = document.getElementById('phone-input');
-      const number = input.value.trim().replace(/[^0-9]/g, '') || '212600000000';
-      navigator.clipboard.writeText(`PAIR_NUMBER=${number}`);
-      alert(`Copied: PAIR_NUMBER=${number}\nPaste this in your Render / Koyeb environment variables!`);
+      document.getElementById('code-msg').innerText = 'Set PAIR_NUMBER=' + number + ' in your Render/Koyeb environment variables. Your 8-digit code will appear in the live logs!';
     }
 
     function copyCode() {
@@ -560,36 +779,43 @@
       alert('Copied: ' + code);
     }
 
+    function copySessionId() {
+      const sid = document.getElementById('session-display').innerText.trim() || currentSessionId;
+      navigator.clipboard.writeText(sid);
+      alert('Copied SESSION_ID: ' + sid);
+    }
+
     function updateEnvPreview() {
-      const session = document.getElementById('cfg-session').value.trim() || 'adam_sessionid_here';
-      const prefix = document.getElementById('cfg-prefix').value.trim() || '.';
-      const lang = document.getElementById('cfg-lang').value;
-      const pack = document.getElementById('cfg-pack').value.trim() || '❤️‍🔥,ADAM';
-      const sudo = document.getElementById('cfg-sudo').value.trim() || '';
-      const gemini = document.getElementById('cfg-gemini').value.trim() || '';
+      const session = document.getElementById('cfg-session')?.value.trim() || currentSessionId || 'lm7bos_adam';
+      const prefix = document.getElementById('cfg-prefix')?.value.trim() || '.';
+      const lang = document.getElementById('cfg-lang')?.value || 'en';
+      const pack = document.getElementById('cfg-pack')?.value.trim() || '❤️‍🔥,ADAM';
+      const sudo = document.getElementById('cfg-sudo')?.value.trim() || '';
+      const gemini = document.getElementById('cfg-gemini')?.value.trim() || '';
       const db = document.getElementById('cfg-db')?.value.trim() || '';
-      const autoView = document.getElementById('cfg-auto-view').checked;
-      const rejectCall = document.getElementById('cfg-reject-call').checked;
+      const autoView = document.getElementById('cfg-auto-view')?.checked || false;
+      const rejectCall = document.getElementById('cfg-reject-call')?.checked || false;
 
-      const envText = `# ── ADAM WhatsApp Bot Environment Config ──
-SESSION_ID="${session}"
-PREFIX="${prefix}"
-BOT_LANG="${lang}"
-STICKER_PACKNAME="${pack}"
-SUDO="${sudo}"
-VPS="true"
-AUTO_UPDATE="true"
-WARN_LIMIT="3"
-ALWAYS_ONLINE="false"
-AUTO_STATUS_VIEW="${autoView}"
-REJECT_CALL="${rejectCall}"
-DATABASE_URL="${db}"
-GEMINI_API_KEY="${gemini}"
-GEMINI_MODEL="gemini-1.5-flash"
-GROQ_MODEL="llama3-70b-8192"
-API_MODE="false"`;
+      const envText = '# ── ADAM WhatsApp Bot Environment Config ──\n' +
+'SESSION_ID="' + session + '"\n' +
+'PREFIX="' + prefix + '"\n' +
+'BOT_LANG="' + lang + '"\n' +
+'STICKER_PACKNAME="' + pack + '"\n' +
+'SUDO="' + sudo + '"\n' +
+'VPS="true"\n' +
+'AUTO_UPDATE="true"\n' +
+'WARN_LIMIT="3"\n' +
+'ALWAYS_ONLINE="false"\n' +
+'AUTO_STATUS_VIEW="' + autoView + '"\n' +
+'REJECT_CALL="' + rejectCall + '"\n' +
+'DATABASE_URL="' + db + '"\n' +
+'GEMINI_API_KEY="' + gemini + '"\n' +
+'GEMINI_MODEL="gemini-1.5-flash"\n' +
+'GROQ_MODEL="llama3-70b-8192"\n' +
+'API_MODE="false"';
 
-      document.getElementById('env-preview').innerText = envText;
+      const previewEl = document.getElementById('env-preview');
+      if (previewEl) previewEl.innerText = envText;
     }
 
     function copyEnv() {
@@ -611,26 +837,27 @@ API_MODE="false"`;
       { name: "Gemini & Groq AI Assistant", cat: "AI", desc: "Intelligent chatbot with image understanding & vision.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/ai.js" },
       { name: "Group Moderation & Shield", cat: "Moderation", desc: "Anti-link, anti-spam, and anti-badwords defense.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/filters.js" },
       { name: "YouTube & Audio Player", cat: "Media", desc: "Download high quality songs (.play) and videos (.video).", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/media.js" },
-      { name: "Animated Sticker Studio", cat: "Media", desc: "Turn pictures and videos into WhatsApp stickers.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/sticker.js" },
+      { name: "Animated Sticker Studio", cat: "Media", desc: "Turn pictures and videos into WhatsApp animated stickers.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/sticker.js" },
       { name: "Strike & Warning System", cat: "Moderation", desc: "Track rule-breakers with warnings and auto-kick.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/warn.js" },
-      { name: "Anti-Delete Protection", cat: "Utilities", desc: "Retrieve deleted messages and expiring media.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/misc.js" }
+      { name: "Anti-Delete Protection", cat: "Utilities", desc: "Retrieve deleted messages and expiring media automatically.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/misc.js" }
     ];
 
     function renderPlugins(list) {
       const container = document.getElementById('plugins-list');
-      container.innerHTML = list.map(p => `
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5 hover:border-red-500/40 transition">
-          <div class="flex items-center justify-between mb-2">
-            <h4 class="font-bold text-white text-sm">${p.name}</h4>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-red-600 text-red-400 border border-red-500">${p.cat}</span>
-          </div>
-          <p class="text-xs text-zinc-400 mb-4">${p.desc}</p>
-          <div class="flex items-center justify-between gap-2 bg-black/60 rounded-lg p-2 font-mono text-[11px] text-zinc-300">
-            <span class="truncate">${p.cmd}</span>
-            <button onclick="navigator.clipboard.writeText('${p.cmd}'); alert('Plugin install command copied!')" class="text-red-400 hover:text-red-300 shrink-0 font-sans font-medium px-2 py-0.5 bg-zinc-800 rounded">Copy</button>
-          </div>
-        </div>
-      `).join('');
+      if (!container) return;
+      container.innerHTML = list.map(p => 
+        '<div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5 hover:border-red-500/40 transition">' +
+          '<div class="flex items-center justify-between mb-2">' +
+            '<h4 class="font-bold text-white text-sm">' + p.name + '</h4>' +
+            '<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800">' + p.cat + '</span>' +
+          '</div>' +
+          '<p class="text-xs text-zinc-400 mb-4">' + p.desc + '</p>' +
+          '<div class="flex items-center justify-between gap-2 bg-black/60 rounded-lg p-2 font-mono text-[11px] text-zinc-300">' +
+            '<span class="truncate">' + p.cmd + '</span>' +
+            '<button onclick="navigator.clipboard.writeText(\'' + p.cmd + '\'); alert(\'Plugin install command copied!\')" class="text-red-400 hover:text-red-300 shrink-0 font-sans font-medium px-2 py-0.5 bg-zinc-800 rounded">Copy</button>' +
+          '</div>' +
+        '</div>'
+      ).join('');
     }
 
     function filterPlugins() {

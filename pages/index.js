@@ -10,12 +10,19 @@ export default function Home() {
   const [copiedCode, setCopiedCode] = useState(false);
   const [pluginSearch, setPluginSearch] = useState('');
 
+  // Session ID Options
+  const [useCustomSession, setUseCustomSession] = useState(false);
+  const [customSessionName, setCustomSessionName] = useState('');
+  const [receiveOnWhatsApp, setReceiveOnWhatsApp] = useState(false);
+  const [generatedSessionId, setGeneratedSessionId] = useState('');
+  const [copiedSessionId, setCopiedSessionId] = useState(false);
+
   // Config state
   const [configValues, setConfigValues] = useState({
     sessionId: '',
     prefix: '.',
     lang: 'en',
-    packname: '⚡,ADAM',
+    packname: '❤️‍🔥,ADAM',
     sudo: '',
     geminiKey: '',
     databaseUrl: '',
@@ -28,7 +35,7 @@ export default function Home() {
   };
 
   const envPreview = `# ── ADAM WhatsApp Bot Environment Config ──
-SESSION_ID="${configValues.sessionId || 'adam_sessionid_here'}"
+SESSION_ID="${configValues.sessionId || generatedSessionId || 'lm7bos_session_id'}"
 PREFIX="${configValues.prefix}"
 BOT_LANG="${configValues.lang}"
 STICKER_PACKNAME="${configValues.packname}"
@@ -50,6 +57,17 @@ API_MODE="false"`;
   const [pairInstruction, setPairInstruction] = useState(null);
   const [copiedPairVar, setCopiedPairVar] = useState(false);
 
+  const getComputedSessionId = () => {
+    if (useCustomSession && customSessionName.trim()) {
+      const clean = customSessionName.trim().replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase();
+      if (clean) return `lm7bos_${clean}`;
+    }
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let rand = '';
+    for (let i = 0; i < 10; i++) rand += chars[Math.floor(Math.random() * chars.length)];
+    return `lm7bos_${rand}`;
+  };
+
   const requestPairingCode = async () => {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     if (!cleanPhone || cleanPhone.length < 9) {
@@ -62,21 +80,29 @@ API_MODE="false"`;
     setPairCode('');
     setPairInstruction(null);
 
+    const targetSessionId = getComputedSessionId();
+
     try {
       const res = await fetch('/api/pair', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ number: cleanPhone, botUrl: botUrl.trim() }),
+        body: JSON.stringify({
+          number: cleanPhone,
+          sessionId: targetSessionId,
+          sessionName: useCustomSession ? customSessionName.trim() : null,
+          botUrl: botUrl.trim()
+        }),
       });
       const data = await res.json();
       setLoading(false);
 
       if (data.ok && data.code) {
         setPairCode(data.code);
-        if (data.sessionId) {
-          handleConfigChange('sessionId', data.sessionId);
-        }
+        const finalSid = data.sessionId || targetSessionId;
+        setGeneratedSessionId(finalSid);
+        handleConfigChange('sessionId', finalSid);
       } else if (data.serverless) {
+        setGeneratedSessionId(targetSessionId);
         setPairInstruction(data.instruction || {
           step1: 'Deploy the bot to Render, Koyeb, Railway, or VPS.',
           step2: `Set environment variable: PAIR_NUMBER=${cleanPhone}`,
@@ -105,6 +131,12 @@ API_MODE="false"`;
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
+  const copySessionId = () => {
+    navigator.clipboard.writeText(generatedSessionId);
+    setCopiedSessionId(true);
+    setTimeout(() => setCopiedSessionId(false), 2000);
+  };
+
   const pluginsList = [
     { name: "Gemini & Groq AI Assistant", cat: "AI", desc: "Intelligent chatbot with image understanding & vision.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/ai.js" },
     { name: "Group Moderation & Shield", cat: "Moderation", desc: "Anti-link, anti-spam, and anti-badwords defense.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/filters.js" },
@@ -123,9 +155,9 @@ API_MODE="false"`;
   return (
     <div style={{ backgroundColor: '#09090b', minHeight: '100vh', color: '#f4f4f5', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
-        <title>⚡ ADAM | WhatsApp Bot Dashboard & Pairing</title>
+        <title>❤️‍🔥 ADAM | WhatsApp Bot Dashboard & Session</title>
         <meta name="description" content="ADAM — The complete WhatsApp bot platform. Manage your bot, deploy in one click, and extend it with community plugins." />
-        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2306b6d4'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>" />
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&display=swap" />
         <script src="https://cdn.tailwindcss.com"></script>
       </Head>
@@ -134,12 +166,12 @@ API_MODE="false"`;
       <header className="border-b border-zinc-800 bg-zinc-950/80 sticky top-0 backdrop-blur-md z-50">
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-emerald-400 flex items-center justify-center font-extrabold text-black text-xl shadow-lg shadow-cyan-500/20">
-              ⚡
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-red-500 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-red-500/20">
+              ❤️‍🔥
             </div>
             <div>
               <span className="font-bold text-lg tracking-tight text-white flex items-center gap-2">
-                ADAM <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-950 text-cyan-400 border border-cyan-800 font-mono">v1.0.0</span>
+                ADAM <span className="text-xs px-2 py-0.5 rounded-full bg-red-950/60 text-red-400 border border-red-800/80 font-mono">v1.0.0</span>
               </span>
             </div>
           </div>
@@ -189,28 +221,130 @@ API_MODE="false"`;
         {/* TAB 1: SESSION */}
         {activeTab === 'session' && (
           <div>
-            <div className="text-center mb-8">
-              <h1 className="text-3xl font-extrabold text-white mb-2">Connect to WhatsApp</h1>
-              <p className="text-sm text-zinc-400">Pair your WhatsApp account securely without sharing passwords or terminal setups.</p>
-            </div>
-
             <div className="bg-zinc-900/90 border border-zinc-800 rounded-2xl p-6 md:p-8 max-w-xl mx-auto shadow-2xl">
-              {/* Segmented controls */}
-              <div className="grid grid-cols-2 gap-1 bg-zinc-950 p-1 rounded-xl mb-6 border border-zinc-800">
-                <button 
-                  onClick={() => setSessionType('pair')}
-                  className={`py-2 text-xs font-medium rounded-lg transition ${sessionType === 'pair' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-400 hover:text-white'}`}
+              
+              {/* Header */}
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-extrabold text-white mb-2">Link a device</h1>
+                <p className="text-sm text-zinc-400">Choose your preferred method to link your device.</p>
+              </div>
+
+              {/* Options Section */}
+              <div className="space-y-3 mb-6">
+                {/* Use Custom Session ID */}
+                <div 
+                  onClick={() => setUseCustomSession(!useCustomSession)}
+                  className="flex items-center gap-3 cursor-pointer select-none group"
                 >
-                  📱 Phone Pairing Code (Cloud / Logs)
-                </button>
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${useCustomSession ? 'bg-red-600 border-red-500 text-white' : 'border-zinc-600 bg-zinc-950 group-hover:border-zinc-400'}`}>
+                    {useCustomSession && (
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition">
+                    Use Custom Session ID
+                  </span>
+                </div>
+
+                {/* Custom Session Input */}
+                {useCustomSession && (
+                  <div className="ml-8 space-y-1">
+                    <div className="flex items-center rounded-xl bg-zinc-950 border border-zinc-700 overflow-hidden focus-within:border-red-500 transition">
+                      <span className="px-3 text-xs font-mono text-zinc-500 bg-zinc-900/60 py-2.5 border-r border-zinc-800">
+                        lm7bos_
+                      </span>
+                      <input 
+                        type="text" 
+                        value={customSessionName} 
+                        onChange={(e) => setCustomSessionName(e.target.value)} 
+                        placeholder="adam" 
+                        className="bg-transparent text-xs text-white font-mono px-3 py-2 w-full focus:outline-none"
+                      />
+                    </div>
+                    <p className="text-[11px] text-zinc-500">
+                      Result: <code className="text-red-400 font-mono">lm7bos_{customSessionName.trim() || 'adam'}</code>
+                    </p>
+                  </div>
+                )}
+
+                {/* Receive Session on WhatsApp */}
+                <div 
+                  onClick={() => setReceiveOnWhatsApp(!receiveOnWhatsApp)}
+                  className="flex items-center gap-3 cursor-pointer select-none group"
+                >
+                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${receiveOnWhatsApp ? 'bg-red-600 border-red-500 text-white' : 'border-zinc-600 bg-zinc-950 group-hover:border-zinc-400'}`}>
+                    {receiveOnWhatsApp && (
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    )}
+                  </div>
+                  <span className="text-sm font-medium text-zinc-300 group-hover:text-white transition">
+                    Receive Session on WhatsApp
+                  </span>
+                </div>
+              </div>
+
+              {/* Select Connection Method Divider */}
+              <div className="relative my-6 text-center">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-zinc-800"></div>
+                </div>
+                <div className="relative">
+                  <span className="bg-zinc-900 px-3 text-[11px] uppercase tracking-wider font-mono text-zinc-500">
+                    Select Connection Method
+                  </span>
+                </div>
+              </div>
+
+              {/* Cards Grid: QR Code vs Pairing Code */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
                 <button 
                   onClick={() => setSessionType('qr')}
-                  className={`py-2 text-xs font-medium rounded-lg transition ${sessionType === 'qr' ? 'bg-zinc-800 text-white shadow' : 'text-zinc-400 hover:text-white'}`}
+                  className={`p-4 rounded-xl border text-left transition flex items-center gap-3 ${
+                    sessionType === 'qr' 
+                      ? 'border-red-500/80 bg-red-950/20 shadow-md shadow-red-950/40' 
+                      : 'border-zinc-800 bg-zinc-950/60 hover:border-zinc-700'
+                  }`}
                 >
-                  📷 QR Code & Terminal
+                  <div className="text-2xl">
+                    <svg className={`w-7 h-7 ${sessionType === 'qr' ? 'text-red-400' : 'text-zinc-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+                      <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+                      <rect x="14" y="14" width="7" height="7" rx="1"></rect>
+                      <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">QR Code</h3>
+                    <p className="text-[11px] text-zinc-500">Scan with WhatsApp</p>
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => setSessionType('pair')}
+                  className={`p-4 rounded-xl border text-left transition flex items-center gap-3 ${
+                    sessionType === 'pair' 
+                      ? 'border-red-500/80 bg-red-950/20 shadow-md shadow-red-950/40' 
+                      : 'border-zinc-800 bg-zinc-950/60 hover:border-zinc-700'
+                  }`}
+                >
+                  <div className="text-2xl">
+                    <svg className={`w-7 h-7 ${sessionType === 'pair' ? 'text-red-400' : 'text-zinc-400'}`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <rect x="5" y="2" width="14" height="20" rx="2"></rect>
+                      <line x1="12" y1="18" x2="12" y2="18.01"></line>
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-white text-sm">Pairing Code</h3>
+                    <p className="text-[11px] text-zinc-500">Use Phone Number</p>
+                  </div>
                 </button>
               </div>
 
+              {/* Form Body: Pairing Code */}
               {sessionType === 'pair' ? (
                 <div className="space-y-4">
                   <div>
@@ -224,7 +358,7 @@ API_MODE="false"`;
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="212612345678"
-                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-8 pr-4 py-3 text-sm text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-cyan-500"
+                        className="w-full bg-zinc-950 border border-zinc-700 rounded-xl pl-8 pr-4 py-3 text-sm text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-red-500"
                       />
                     </div>
                     <p className="text-[11px] text-zinc-500 mt-1">Example: Morocco: 2126XXXXXXXX | Egypt: 201XXXXXXXXX | USA: 1XXXXXXXXXX</p>
@@ -240,38 +374,75 @@ API_MODE="false"`;
                       value={botUrl}
                       onChange={(e) => setBotUrl(e.target.value)}
                       placeholder="https://my-adam-bot.onrender.com"
-                      className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-zinc-950 border border-zinc-700 rounded-xl px-4 py-2.5 text-xs text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-red-500"
                     />
                   </div>
 
                   <button 
                     onClick={requestPairingCode}
                     disabled={loading}
-                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-black font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20"
+                    className="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 text-white font-semibold text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-red-600/30"
                   >
                     {loading ? (
-                      <span className="inline-block w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin"></span>
+                      <>
+                        <span className="inline-block w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span>Connecting to WhatsApp… (5-10s)</span>
+                      </>
                     ) : (
-                      '⚡ Generate Cloud Pairing Config'
+                      '⚡ Get WhatsApp Session Code'
                     )}
                   </button>
 
-                  {/* Live Pairing Code Result */}
-                  {pairCode && (
-                    <div className="mt-6 pt-6 border-t border-zinc-800 text-center animate-fade-in">
-                      <p className="text-xs text-zinc-400 uppercase tracking-wider font-mono mb-2">WhatsApp 8-Digit Pairing Code</p>
-                      <div className="flex items-center justify-center gap-3">
-                        <div className="font-mono text-3xl font-extrabold tracking-widest text-emerald-400 bg-zinc-950 px-6 py-3 rounded-xl border border-emerald-800">
-                          {pairCode}
+                  {/* Generated Session ID & Code Results */}
+                  {generatedSessionId && (
+                    <div className="mt-6 pt-6 border-t border-zinc-800 space-y-4">
+                      {/* Session ID display */}
+                      <div className="bg-zinc-950 border border-red-900/40 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-mono font-semibold text-red-400">🔑 Generated SESSION_ID:</span>
+                          <button 
+                            onClick={copySessionId}
+                            className="text-[11px] px-2.5 py-1 bg-red-950/80 hover:bg-red-900 border border-red-800 text-red-300 rounded-lg transition"
+                          >
+                            {copiedSessionId ? '✓ Copied' : '📋 Copy Session ID'}
+                          </button>
                         </div>
-                        <button 
-                          onClick={copyCode}
-                          className="p-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-xl text-white transition text-sm"
-                        >
-                          {copiedCode ? '✓ Copied' : '📋 Copy'}
-                        </button>
+                        <code className="block p-2 bg-black/60 border border-zinc-800 rounded-lg text-xs font-mono text-red-300 break-all select-all">
+                          {generatedSessionId}
+                        </code>
+                        <p className="text-[11px] text-zinc-500 mt-2">
+                          Save this to your <code className="text-zinc-400 font-mono">config.env</code> under <code className="text-zinc-400 font-mono">SESSION_ID</code>!
+                        </p>
                       </div>
-                      <p className="text-xs text-emerald-400 mt-3">Open WhatsApp &rarr; Linked Devices &rarr; Link with phone number!</p>
+
+                      {/* 8-Digit Pairing Code */}
+                      {pairCode && (
+                        <div className="text-center space-y-3 pt-2">
+                          <p className="text-xs text-zinc-400 uppercase tracking-wider font-mono">✅ Real WhatsApp 8-Digit Code</p>
+                          <div className="flex items-center justify-center gap-3">
+                            <div className="font-mono text-3xl font-extrabold tracking-widest text-red-400 bg-zinc-950 px-6 py-3 rounded-xl border border-red-800 select-all">
+                              {pairCode}
+                            </div>
+                            <button 
+                              onClick={copyCode}
+                              className="p-3 bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 rounded-xl text-white transition text-sm"
+                            >
+                              {copiedCode ? '✓ Copied' : '📋'}
+                            </button>
+                          </div>
+                          
+                          <div className="bg-red-950/20 border border-red-800/40 rounded-xl p-4 text-xs space-y-1.5 text-left">
+                            <p className="font-semibold text-red-300">📱 How to use this code:</p>
+                            <ol className="list-decimal list-inside space-y-1 text-red-200/80">
+                              <li>Open <b>WhatsApp</b> on your phone</li>
+                              <li>Tap ⋮ Menu → <b>Linked Devices</b> → <b>Link a Device</b></li>
+                              <li>Tap <b>"Link with phone number instead"</b> at the bottom</li>
+                              <li>Enter the code: <code className="text-red-300 font-mono font-bold">{pairCode}</code></li>
+                            </ol>
+                            <p className="text-zinc-400 text-[11px] mt-2">⏱ Code expires in ~2 minutes. If it expires, click the button again.</p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -282,26 +453,26 @@ API_MODE="false"`;
                     </div>
                   )}
 
-                  {/* 1-Click Instructions & PAIR_NUMBER Copy */}
-                  {(pairInstruction || phone) && (
-                    <div className="mt-4 p-4 bg-zinc-950 border border-cyan-900/60 rounded-xl space-y-3">
+                  {/* 1-Click Cloud Pairing fallback */}
+                  {pairInstruction && (
+                    <div className="mt-4 p-4 bg-zinc-950 border border-red-900/60 rounded-xl space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-mono font-semibold text-cyan-400">Environment Variable:</span>
+                        <span className="text-xs font-mono font-semibold text-red-400">Environment Variable:</span>
                         <button 
                           onClick={copyPairVar} 
-                          className="text-[11px] px-2.5 py-1 bg-cyan-950 hover:bg-cyan-900 border border-cyan-800 text-cyan-300 rounded-lg transition"
+                          className="text-[11px] px-2.5 py-1 bg-red-950 hover:bg-red-900 border border-red-800 text-red-300 rounded-lg transition"
                         >
                           {copiedPairVar ? '✓ Copied!' : '📋 Copy Variable'}
                         </button>
                       </div>
-                      <code className="block p-2 bg-black border border-zinc-800 rounded-lg text-xs font-mono text-emerald-400 break-all">
+                      <code className="block p-2 bg-black border border-zinc-800 rounded-lg text-xs font-mono text-red-400 break-all">
                         PAIR_NUMBER={phone.replace(/[^0-9]/g, '') || '2126XXXXXXXX'}
                       </code>
 
                       <div className="space-y-1.5 text-xs text-zinc-300 pt-2 border-t border-zinc-900">
                         <p className="font-semibold text-white">How to link in 3 steps:</p>
                         <ol className="list-decimal list-inside space-y-1 text-zinc-400 text-[11px]">
-                          <li>Add <code className="text-cyan-400 font-mono">PAIR_NUMBER</code> to your Render / Koyeb environment variables.</li>
+                          <li>Add <code className="text-red-400 font-mono">PAIR_NUMBER</code> to your Render / Koyeb environment variables.</li>
                           <li>Deploy or restart the bot. In the <b>Logs</b> tab, your WhatsApp 8-digit code is printed automatically.</li>
                           <li>Open WhatsApp on phone &rarr; <b>Linked Devices</b> &rarr; <b>Link with phone number</b> &rarr; enter the code!</li>
                         </ol>
@@ -320,17 +491,35 @@ API_MODE="false"`;
                       Run the bot directly on your PC, VPS, or cloud terminal without setting a phone number:
                     </p>
                   </div>
-                  <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-left font-mono text-xs text-cyan-300 max-w-md mx-auto">
+                  <div className="bg-zinc-950 border border-zinc-800 rounded-xl p-3 text-left font-mono text-xs text-red-300 max-w-md mx-auto">
                     <p className="text-zinc-500"># 1. Start the bot</p>
                     <p className="text-white">npm start</p>
                     <p className="text-zinc-500 mt-2"># 2. WhatsApp ASCII QR code is rendered live in terminal</p>
                     <p className="text-zinc-500"># 3. Scan with WhatsApp &rarr; Linked Devices &rarr; Link a Device</p>
                   </div>
                   <p className="text-[11px] text-zinc-500">
-                    💡 Once connected, your permanent <code className="text-cyan-400 font-mono">SESSION_ID</code> is printed in the terminal for future 24/7 cloud deploys!
+                    💡 Once connected, your permanent <code className="text-red-400 font-mono">SESSION_ID</code> is printed in the terminal for future 24/7 cloud deploys!
                   </p>
                 </div>
               )}
+
+              {/* Warning Banners (matching screenshot) */}
+              <div className="mt-8 space-y-3">
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-red-950/30 border border-red-900/40 text-red-400/90 text-xs">
+                  <div className="w-5 h-5 rounded-full border border-red-500 flex items-center justify-center font-bold text-[10px] shrink-0">
+                    !
+                  </div>
+                  <span>You will not receive the session ID on WhatsApp, so copy it from here.</span>
+                </div>
+
+                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-amber-950/30 border border-amber-900/40 text-amber-400/90 text-xs">
+                  <div className="w-5 h-5 rounded-full border border-amber-500 flex items-center justify-center font-bold text-[10px] shrink-0">
+                    i
+                  </div>
+                  <span>If connection fails, try using a VPN.</span>
+                </div>
+              </div>
+
             </div>
           </div>
         )}
@@ -351,7 +540,7 @@ API_MODE="false"`;
                   href="https://render.com/deploy?repo=https://github.com/ADAM0S999/lm7bos" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="block w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-center text-xs transition"
+                  className="block w-full py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-center text-xs transition shadow-md shadow-red-900/20"
                 >
                   🚀 Deploy on Render
                 </a>
@@ -364,7 +553,7 @@ API_MODE="false"`;
                   href="https://app.koyeb.com/deploy?type=git&repository=github.com/ADAM0S999/lm7bos&branch=main&name=adam-bot" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="block w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-center text-xs transition"
+                  className="block w-full py-2.5 px-4 rounded-xl bg-red-700 hover:bg-red-600 text-white font-semibold text-center text-xs transition"
                 >
                   🚀 Deploy on Koyeb
                 </a>
@@ -383,17 +572,17 @@ API_MODE="false"`;
                 </a>
               </div>
 
-                            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-bold text-white text-base">CockroachDB Cloud</h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800">Free Cluster</span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-800">Free Cluster</span>
                 </div>
                 <p className="text-xs text-zinc-400 mb-4">Free serverless PostgreSQL database with zero maintenance. Perfect for persistent bot database.</p>
                 <a 
                   href="https://cockroachlabs.cloud/clusters" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="block w-full py-2.5 px-4 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-semibold text-center text-xs transition"
+                  className="block w-full py-2.5 px-4 rounded-xl bg-red-800 hover:bg-red-700 text-white font-semibold text-center text-xs transition"
                 >
                   🗄️ Get Free Cluster (CockroachDB)
                 </a>
@@ -402,7 +591,7 @@ API_MODE="false"`;
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <h3 className="font-bold text-white text-base mb-1">VPS / Ubuntu</h3>
                 <p className="text-xs text-zinc-400 mb-2">Run locally or on any Linux server with PM2:</p>
-                <div className="bg-black/60 rounded-lg p-2 font-mono text-[11px] text-cyan-300 truncate">
+                <div className="bg-black/60 rounded-lg p-2 font-mono text-[11px] text-red-300 truncate">
                   git clone https://github.com/ADAM0S999/lm7bos && cd lm7bos && npm i && npm start
                 </div>
               </div>
@@ -419,20 +608,20 @@ API_MODE="false"`;
                 <p className="text-xs text-zinc-400">Discover and install plugins to extend your bot commands.</p>
               </div>
               <input 
-                type="text"
-                value={pluginSearch}
-                onChange={(e) => setPluginSearch(e.target.value)}
-                placeholder="Search plugins..."
-                className="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-cyan-500 w-full sm:w-64"
+                type="text" 
+                value={pluginSearch} 
+                onChange={(e) => setPluginSearch(e.target.value)} 
+                placeholder="Search plugins..." 
+                className="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-red-500 w-full sm:w-64"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {filteredPlugins.map((plugin, i) => (
-                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-cyan-500/40 transition">
+                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-red-500/40 transition">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="font-bold text-white text-sm">{plugin.name}</h4>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-400 border border-cyan-800">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800">
                       {plugin.cat}
                     </span>
                   </div>
@@ -444,7 +633,7 @@ API_MODE="false"`;
                         navigator.clipboard.writeText(plugin.cmd);
                         alert('Install command copied to clipboard!');
                       }}
-                      className="text-cyan-400 hover:text-cyan-300 shrink-0 font-sans font-medium px-2 py-0.5 bg-zinc-800 rounded"
+                      className="text-red-400 hover:text-red-300 shrink-0 font-sans font-medium px-2 py-0.5 bg-zinc-800 rounded"
                     >
                       Copy
                     </button>
@@ -466,9 +655,9 @@ API_MODE="false"`;
                   <label className="block text-zinc-300 mb-1">SESSION_ID (Required)</label>
                   <input 
                     type="text" 
-                    value={configValues.sessionId}
-                    onChange={(e) => handleConfigChange('sessionId', e.target.value)}
-                    placeholder="adam_session_..."
+                    value={configValues.sessionId} 
+                    onChange={(e) => handleConfigChange('sessionId', e.target.value)} 
+                    placeholder="lm7bos_adam" 
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
@@ -478,16 +667,16 @@ API_MODE="false"`;
                     <label className="block text-zinc-300 mb-1">PREFIX</label>
                     <input 
                       type="text" 
-                      value={configValues.prefix}
-                      onChange={(e) => handleConfigChange('prefix', e.target.value)}
+                      value={configValues.prefix} 
+                      onChange={(e) => handleConfigChange('prefix', e.target.value)} 
                       className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                     />
                   </div>
                   <div>
                     <label className="block text-zinc-300 mb-1">LANGUAGE</label>
                     <select 
-                      value={configValues.lang}
-                      onChange={(e) => handleConfigChange('lang', e.target.value)}
+                      value={configValues.lang} 
+                      onChange={(e) => handleConfigChange('lang', e.target.value)} 
                       className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                     >
                       <option value="en">English (en)</option>
@@ -502,8 +691,8 @@ API_MODE="false"`;
                   <label className="block text-zinc-300 mb-1">STICKER PACKNAME</label>
                   <input 
                     type="text" 
-                    value={configValues.packname}
-                    onChange={(e) => handleConfigChange('packname', e.target.value)}
+                    value={configValues.packname} 
+                    onChange={(e) => handleConfigChange('packname', e.target.value)} 
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
@@ -512,23 +701,23 @@ API_MODE="false"`;
                   <label className="block text-zinc-300 mb-1">SUDO NUMBERS</label>
                   <input 
                     type="text" 
-                    value={configValues.sudo}
-                    onChange={(e) => handleConfigChange('sudo', e.target.value)}
-                    placeholder="212612345678,14150000000"
+                    value={configValues.sudo} 
+                    onChange={(e) => handleConfigChange('sudo', e.target.value)} 
+                    placeholder="212612345678,14150000000" 
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
 
-                                <div>
+                <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="text-zinc-300">DATABASE_URL (CockroachDB / PostgreSQL)</label>
-                    <a href="https://cockroachlabs.cloud/clusters" target="_blank" rel="noreferrer" className="text-cyan-400 hover:underline text-[11px]">Get Free Cluster ↗</a>
+                    <a href="https://cockroachlabs.cloud/clusters" target="_blank" rel="noreferrer" className="text-red-400 hover:underline text-[11px]">Get Free Cluster ↗</a>
                   </div>
                   <input 
                     type="text" 
-                    value={configValues.databaseUrl}
-                    onChange={(e) => handleConfigChange('databaseUrl', e.target.value)}
-                    placeholder="postgresql://user:pass@cluster.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full"
+                    value={configValues.databaseUrl} 
+                    onChange={(e) => handleConfigChange('databaseUrl', e.target.value)} 
+                    placeholder="postgresql://user:pass@cluster.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full" 
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                   <p className="text-[11px] text-zinc-500 mt-1">Leave empty for SQLite, or create a free cluster at CockroachDB Cloud.</p>
@@ -538,9 +727,9 @@ API_MODE="false"`;
                   <label className="block text-zinc-300 mb-1">GEMINI API KEY</label>
                   <input 
                     type="password" 
-                    value={configValues.geminiKey}
-                    onChange={(e) => handleConfigChange('geminiKey', e.target.value)}
-                    placeholder="AIzaSy..."
+                    value={configValues.geminiKey} 
+                    onChange={(e) => handleConfigChange('geminiKey', e.target.value)} 
+                    placeholder="AIzaSy..." 
                     className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
                   />
                 </div>
@@ -550,7 +739,7 @@ API_MODE="false"`;
             <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between">
               <div>
                 <h3 className="font-bold text-white text-base mb-3">📄 Generated config.env</h3>
-                <pre className="bg-black/80 rounded-xl p-4 font-mono text-xs text-emerald-400 overflow-x-auto border border-zinc-800 h-80">
+                <pre className="bg-black/80 rounded-xl p-4 font-mono text-xs text-red-400 overflow-x-auto border border-zinc-800 h-80">
                   {envPreview}
                 </pre>
               </div>
@@ -561,7 +750,7 @@ API_MODE="false"`;
                     navigator.clipboard.writeText(envPreview);
                     alert('config.env copied!');
                   }}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-xs transition"
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition"
                 >
                   📋 Copy config.env
                 </button>
@@ -574,10 +763,8 @@ API_MODE="false"`;
 
       {/* Footer */}
       <footer className="border-t border-zinc-800/80 mt-16 py-6 text-center text-xs text-zinc-500">
-        <p>⚡ ADAM WhatsApp Bot Platform &bull; Compatible with Vercel, Render, Koyeb, and VPS</p>
+        <p>❤️‍🔥 ADAM WhatsApp Bot Platform &bull; Compatible with Vercel, Render, Koyeb, and VPS</p>
       </footer>
     </div>
   );
 }
-
-
