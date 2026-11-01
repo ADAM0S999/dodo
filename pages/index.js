@@ -30,7 +30,7 @@ export default function Home() {
     sessionId: '',
     prefix: '.',
     lang: 'en',
-    packname: '❤️‍🔥,ADAM',
+    packname: '🤖,ADAM',
     sudo: '',
     geminiKey: '',
     databaseUrl: '',
@@ -143,9 +143,9 @@ API_MODE="false"`;
   return (
     <div style={{ backgroundColor: '#09090b', minHeight: '100vh', color: '#f4f4f5', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
       <Head>
-        <title>Link a device | ADAM WhatsApp Bot</title>
+        <title>Link a device | 🤖 ADAM WhatsApp Bot</title>
         <meta name="description" content="ADAM — Choose your preferred method to link your WhatsApp device." />
-        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ef4444'><path d='M13 2L3 14h9l-1 8 10-12h-9l1-8z'/></svg>" />
+        <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><text y='20' font-size='20'>🤖</text></svg>" />
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500;600;700&display=swap" />
         <script src="https://cdn.tailwindcss.com"></script>
       </Head>
@@ -155,7 +155,7 @@ API_MODE="false"`;
         <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-red-500 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-red-500/20">
-              ❤️‍🔥
+              🤖
             </div>
             <div>
               <span className="font-bold text-lg tracking-tight text-white flex items-center gap-2">
@@ -804,7 +804,7 @@ API_MODE="false"`;
 
       {/* Footer */}
       <footer className="border-t border-zinc-800/80 mt-16 py-6 text-center text-xs text-zinc-500 font-mono">
-        <p>❤️‍🔥 ADAM WhatsApp Bot Platform &bull; Compatible with Vercel, Render, Koyeb, and VPS</p>
+        <p>🤖 ADAM WhatsApp Bot Platform &bull; Compatible with Vercel, Render, Koyeb, and VPS</p>
       </footer>
     </div>
   );

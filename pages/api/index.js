@@ -132,7 +132,7 @@ app.get(['/api/health', '/api'], (req, res) => {
 // ── GET /api/info ───────────────────────────────────────────────────────────
 app.get('/api/info', (req, res) => {
   res.json({
-    name: '❤️‍🔥 ADAM WhatsApp Bot',
+    name: '🤖 ADAM WhatsApp Bot',
     version: '1.0.0',
     description: 'High-performance WhatsApp automation bot built on Baileys with multi-session and AI capabilities.',
     github: 'https://github.com/ADAM0S999/lm7bos',

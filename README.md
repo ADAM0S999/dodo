@@ -1,4 +1,4 @@
-# ❤️‍🔥 ADAM WhatsApp Bot
+# 🤖 ADAM WhatsApp Bot
 
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FADAM0S999%2Flm7bos)
 [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/ADAM0S999/lm7bos)
@@ -33,7 +33,7 @@ ADAM includes a full **Vercel Web Platform & Pairing Code Generator**:
 | 🌐 **REST API** | Full Express API to send messages programmatically + webhook relay |
 | 🗄️ **Database** | SQLite (default) or [CockroachDB Cloud](https://cockroachlabs.cloud/clusters) Serverless PostgreSQL |
 | 🌍 **Localization** | English (more languages: add `lang/<code>.json`) |
-| ❤️‍🔥 **Rate Limiting** | Built-in per-user cooldowns to prevent spam abuse |
+| 🤖 **Rate Limiting** | Built-in per-user cooldowns to prevent spam abuse |
 | 🐳 **Docker** | Multi-stage build for production-ready, minimal images |
 | ☁️ **Cloud Ready** | One-click deploy to Koyeb, Render, Heroku |
 
@@ -154,7 +154,7 @@ docker run -d \
 | `PREFIX` | `.` | Command prefix |
 | `SUDO` | — | Owner phone number(s), comma-separated |
 | `BOT_LANG` | `en` | Bot language code |
-| `STICKER_PACKNAME` | `❤️‍🔥,ADAM` | Sticker pack name (format: `pack,author`) |
+| `STICKER_PACKNAME` | `🤖,ADAM` | Sticker pack name (format: `pack,author`) |
 | `VPS` | `false` | Set `true` on a server |
 | `ALWAYS_ONLINE` | `false` | Keep bot as "Online" always |
 | `SEND_READ` | `false` | Send read receipts |
