@@ -14,7 +14,7 @@ function generateSessionId(customName = null) {
   for (let i = 0; i < 10; i++) {
     randomPart += chars.charAt(Math.floor(Math.random() * chars.length));
   }
-  return `${prefix}_${randomPart}`;
+  return `${prefix}_adjacency${randomPart}`;
 }
 
 export default async function handler(req, res) {

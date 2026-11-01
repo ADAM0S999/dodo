@@ -50,7 +50,7 @@ export default function Home() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     let rand = '';
     for (let i = 0; i < 10; i++) rand += chars[Math.floor(Math.random() * chars.length)];
-    return `lm7bos_${rand}`;
+    return `lm7bos_adjacency${rand}`;
   };
 
   const handleRequestPairing = async () => {
