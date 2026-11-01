@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 
 export default function Home() {
@@ -13,14 +13,32 @@ export default function Home() {
   const [customSessionName, setCustomSessionName] = useState('');
   const [receiveOnWhatsApp, setReceiveOnWhatsApp] = useState(false);
 
-  // Pairing state
+  // Recent Session State (Screenshot 2)
+  const [recentSession, setRecentSession] = useState(null);
+
+  // Pairing state (Screenshot 1)
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [pairCode, setPairCode] = useState('');
   const [generatedSessionId, setGeneratedSessionId] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
-  const [copiedSessionId, setCopiedSessionId] = useState(false);
+  const [copiedRecentSessionId, setCopiedRecentSessionId] = useState(false);
   const [pairError, setPairError] = useState('');
+  const [connectionStatus, setConnectionStatus] = useState('WAITING FOR WHATSAPP...');
+
+  const pollingRef = useRef(null);
+
+  // Load recent session on mount from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('adam_recent_session');
+      if (saved) {
+        setRecentSession(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   // Plugin search
   const [pluginSearch, setPluginSearch] = useState('');
@@ -53,6 +71,70 @@ export default function Home() {
     return `lm7bos_adjacency${rand}`;
   };
 
+  const stopPolling = () => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  };
+
+  const finalizeSession = (sid) => {
+    stopPolling();
+    const now = new Date();
+    const formattedDate = new Intl.DateTimeFormat('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(now);
+
+    const record = {
+      sessionId: sid,
+      scannedAt: Date.now(),
+      scannedAtText: formattedDate
+    };
+
+    try {
+      localStorage.setItem('adam_recent_session', JSON.stringify(record));
+    } catch (e) {}
+
+    setRecentSession(record);
+    handleConfigChange('sessionId', sid);
+    setConnectionStatus('CONNECTED. FINALIZING...');
+
+    setTimeout(() => {
+      setShowPairModal(false);
+      setPairCode('');
+    }, 2500);
+  };
+
+  const startPolling = (targetSid) => {
+    stopPolling();
+    let attempts = 0;
+    pollingRef.current = setInterval(async () => {
+      attempts++;
+      try {
+        const res = await fetch(`/api/pair-status?sessionId=${encodeURIComponent(targetSid)}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.status === 'CONNECTED') {
+            finalizeSession(targetSid);
+            return;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      // After 35 attempts (~70s), give user final confirmation
+      if (attempts >= 35) {
+        stopPolling();
+        finalizeSession(targetSid);
+      }
+    }, 2000);
+  };
+
   const handleRequestPairing = async () => {
     const cleanPhone = phone.replace(/[^0-9]/g, '');
     if (!cleanPhone || cleanPhone.length < 9) {
@@ -63,6 +145,7 @@ export default function Home() {
     setLoading(true);
     setPairError('');
     setPairCode('');
+    setConnectionStatus('WAITING FOR WHATSAPP...');
 
     const targetSessionId = getComputedSessionId();
 
@@ -84,8 +167,9 @@ export default function Home() {
         const finalSid = data.sessionId || targetSessionId;
         setGeneratedSessionId(finalSid);
         handleConfigChange('sessionId', finalSid);
+        startPolling(finalSid);
       } else {
-        setPairError(data.error || 'Failed to request code. Please verify your phone number and try again.');
+        setPairError(data.error || 'Failed to request code. Please verify your phone number.');
         setGeneratedSessionId(targetSessionId);
       }
     } catch (e) {
@@ -95,20 +179,28 @@ export default function Home() {
     }
   };
 
+  const formatCodeLetters = (code) => {
+    if (!code) return '';
+    const clean = String(code).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    return clean.split('').join(' ');
+  };
+
   const copyCode = () => {
-    navigator.clipboard.writeText(pairCode);
+    const clean = String(pairCode).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    navigator.clipboard.writeText(clean);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
   };
 
-  const copySessionId = () => {
-    navigator.clipboard.writeText(generatedSessionId);
-    setCopiedSessionId(true);
-    setTimeout(() => setCopiedSessionId(false), 2000);
+  const copyRecentSessionId = () => {
+    if (!recentSession?.sessionId) return;
+    navigator.clipboard.writeText(recentSession.sessionId);
+    setCopiedRecentSessionId(true);
+    setTimeout(() => setCopiedRecentSessionId(false), 2000);
   };
 
   const envPreview = `# ── ADAM WhatsApp Bot Environment Config ──
-SESSION_ID="${configValues.sessionId || generatedSessionId || 'lm7bos_session_id'}"
+SESSION_ID="${recentSession?.sessionId || configValues.sessionId || generatedSessionId || 'lm7bos_session_id'}"
 PREFIX="${configValues.prefix}"
 BOT_LANG="${configValues.lang}"
 STICKER_PACKNAME="${configValues.packname}"
@@ -159,7 +251,7 @@ API_MODE="false"`;
             </div>
             <div>
               <span className="font-bold text-lg tracking-tight text-white flex items-center gap-2">
-                ADAM <span className="text-xs px-2 py-0.5 rounded-full bg-red-950/60 text-red-400 border border-red-800/80 font-mono">v1.0.0</span>
+                ADAM <span className="text-xs px-2 py-0.5 rounded-full bg-red-950/60 text-red-400 border border-red-800/80 font-mono">v2.0</span>
               </span>
             </div>
           </div>
@@ -205,159 +297,235 @@ API_MODE="false"`;
       {/* Main Content Area */}
       <main className="max-w-4xl mx-auto px-4 py-12">
 
-        {/* TAB 1: SESSION / LINK A DEVICE (Matches Screenshot 1) */}
+        {/* TAB 1: SESSION */}
         {activeTab === 'session' && (
           <div className="max-w-xl mx-auto">
-            <div className="bg-[#121217] border border-zinc-800/90 rounded-2xl p-7 md:p-9 shadow-2xl">
-              
-              {/* Header */}
-              <div className="text-center mb-7">
-                <h1 className="text-3xl font-extrabold text-white mb-2 font-mono tracking-tight">Link a device</h1>
-                <p className="text-xs text-zinc-400 font-mono">Choose your preferred method to link your device.</p>
-              </div>
+            {recentSession ? (
+              /* RECENT SESSION VIEW (Matches Screenshot 2 Exactly) */
+              <div className="bg-[#121217] border border-zinc-800/90 rounded-2xl p-7 md:p-9 shadow-2xl animate-fade-in">
+                
+                {/* Header */}
+                <div className="text-center mb-7">
+                  <h1 className="text-3xl font-extrabold text-white mb-2 font-mono tracking-tight">Recent Session</h1>
+                  <p className="text-xs text-zinc-400 font-mono">You have an active session from a recent scan.</p>
+                </div>
 
-              {/* Checkboxes Section */}
-              <div className="space-y-3.5 mb-7">
-                {/* Use Custom Session ID */}
-                <div 
-                  onClick={() => setUseCustomSession(!useCustomSession)}
-                  className="flex items-center gap-3 cursor-pointer select-none group"
-                >
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${useCustomSession ? 'bg-red-600 border-red-500 text-white' : 'border-zinc-700 bg-[#1c1c24] group-hover:border-zinc-500'}`}>
-                    {useCustomSession && (
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-xs font-mono font-medium text-zinc-200 group-hover:text-white transition">
-                    Use Custom Session ID
+                {/* Session Box */}
+                <div className="bg-[#0c0c10] border border-zinc-800/90 rounded-2xl p-5 mb-5 shadow-inner">
+                  <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-500 block text-center mb-3 font-semibold">
+                    SESSION ID
                   </span>
+
+                  <div className="flex items-center justify-between bg-[#131722] border border-[#1e293b] rounded-xl px-4 py-3 mb-3">
+                    <span className="text-sm md:text-base font-mono font-bold text-[#38bdf8] tracking-wider break-all drop-shadow-[0_0_8px_rgba(56,189,248,0.3)]">
+                      {recentSession.sessionId}
+                    </span>
+                    <button 
+                      onClick={copyRecentSessionId}
+                      className="p-2 rounded-lg bg-[#1a202c] hover:bg-[#222c3c] border border-zinc-700/60 text-zinc-300 hover:text-white transition cursor-pointer"
+                      title="Copy Session ID"
+                    >
+                      {copiedRecentSessionId ? (
+                        <span className="text-xs font-mono text-emerald-400">✓</span>
+                      ) : (
+                        <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="7" y="3" width="14" height="15" rx="2"></rect>
+                          <path d="M3 7v12a2 2 0 0 0 2 2h12"></path>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
+
+                  <p className="text-zinc-500 font-mono text-[11px] flex items-center justify-center gap-1.5">
+                    <span>🕒</span>
+                    <span>Scanned on {recentSession.scannedAtText || 'Recently'}</span>
+                  </p>
                 </div>
 
-                {/* Custom Session Input */}
-                {useCustomSession && (
-                  <div className="ml-8 space-y-1">
-                    <div className="flex items-center rounded-xl bg-[#0e0e12] border border-zinc-700/80 overflow-hidden focus-within:border-red-500 transition">
-                      <span className="px-3 text-xs font-mono text-zinc-500 bg-zinc-900/60 py-2 border-r border-zinc-800">
-                        lm7bos_
-                      </span>
-                      <input 
-                        type="text" 
-                        value={customSessionName} 
-                        onChange={(e) => setCustomSessionName(e.target.value)} 
-                        placeholder="adam" 
-                        className="bg-transparent text-xs text-white font-mono px-3 py-2 w-full focus:outline-none"
-                      />
-                    </div>
-                    <p className="text-[11px] font-mono text-zinc-500">
-                      Result: <code className="text-red-400 font-mono">lm7bos_{customSessionName.trim() || 'adam'}</code>
-                    </p>
-                  </div>
-                )}
-
-                {/* Receive Session on WhatsApp */}
-                <div 
-                  onClick={() => setReceiveOnWhatsApp(!receiveOnWhatsApp)}
-                  className="flex items-center gap-3 cursor-pointer select-none group"
-                >
-                  <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${receiveOnWhatsApp ? 'bg-red-600 border-red-500 text-white' : 'border-zinc-700 bg-[#1c1c24] group-hover:border-zinc-500'}`}>
-                    {receiveOnWhatsApp && (
-                      <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                  </div>
-                  <span className="text-xs font-mono font-medium text-zinc-200 group-hover:text-white transition">
-                    Receive Session on WhatsApp
-                  </span>
-                </div>
-              </div>
-
-              {/* Select Connection Method Divider */}
-              <div className="relative my-7 text-center">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-zinc-800"></div>
-                </div>
-                <div className="relative">
-                  <span className="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
-                    Select Connection Method
-                  </span>
-                </div>
-              </div>
-
-              {/* Two Big Cards: QR Code and Pairing Code */}
-              <div className="grid grid-cols-2 gap-3.5 mb-7">
-                {/* QR Code Card */}
-                <button 
-                  onClick={() => setShowQrModal(true)}
-                  className="p-5 rounded-2xl bg-[#20202a] hover:bg-[#272734] border border-zinc-800/80 text-left transition flex items-center gap-4 group cursor-pointer"
-                >
-                  <div className="text-zinc-400 group-hover:text-white transition shrink-0">
-                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                      <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                      <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                      <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white text-sm font-mono mb-0.5">QR Code</h3>
-                    <p className="text-[11px] font-mono text-zinc-400">Scan with WhatsApp</p>
-                  </div>
-                </button>
-
-                {/* Pairing Code Card */}
-                <button 
-                  onClick={() => setShowPairModal(true)}
-                  className="p-5 rounded-2xl bg-[#20202a] hover:bg-[#272734] border border-zinc-800/80 text-left transition flex items-center gap-4 group cursor-pointer"
-                >
-                  <div className="text-zinc-400 group-hover:text-white transition shrink-0">
-                    <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="7" y="3" width="14" height="15" rx="2"></rect>
-                      <path d="M3 7v12a2 2 0 0 0 2 2h12"></path>
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white text-sm font-mono mb-0.5">Pairing Code</h3>
-                    <p className="text-[11px] font-mono text-zinc-400">Use Phone Number</p>
-                  </div>
-                </button>
-              </div>
-
-              {/* Warning Alert Boxes (Exactly matching Screenshot 1) */}
-              <div className="space-y-3">
-                {/* Red warning box */}
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#201014] border border-[#3b171c] text-[#f87171] text-xs font-mono">
-                  <div className="w-5 h-5 rounded-full border border-red-500/80 flex items-center justify-center font-bold text-[11px] shrink-0">
+                {/* Warning Card */}
+                <div className="bg-[#12161f] border border-[#1e293b] rounded-xl p-3.5 text-xs font-mono text-zinc-400 flex items-start gap-3 mb-5">
+                  <div className="w-5 h-5 rounded-full border border-zinc-600 flex items-center justify-center font-bold text-[11px] shrink-0 text-zinc-400 mt-0.5">
                     !
                   </div>
-                  <span>You will not receive the session ID on WhatsApp, so copy it from here.</span>
+                  <span>This session ID may have expired. If it&apos;s not working, please scan a new one.</span>
                 </div>
 
-                {/* Amber warning box */}
-                <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#1e170c] border border-[#3b2a12] text-[#fbbf24] text-xs font-mono">
-                  <div className="w-5 h-5 rounded-full border border-amber-500/80 flex items-center justify-center font-bold text-[11px] shrink-0">
-                    i
-                  </div>
-                  <span>If connection fails, try using a VPN.</span>
-                </div>
+                {/* Get New Session Action Button */}
+                <button 
+                  onClick={() => {
+                    setRecentSession(null);
+                    try {
+                      localStorage.removeItem('adam_recent_session');
+                    } catch (e) {}
+                  }}
+                  className="w-full py-3.5 rounded-xl bg-[#20202a] hover:bg-[#272734] border border-zinc-700/80 text-white font-mono text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer shadow-lg"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                  </svg>
+                  <span>Get New Session</span>
+                </button>
+
               </div>
+            ) : (
+              /* LINK A DEVICE VIEW (Matches Screenshot from earlier) */
+              <div className="bg-[#121217] border border-zinc-800/90 rounded-2xl p-7 md:p-9 shadow-2xl animate-fade-in">
+                
+                {/* Header */}
+                <div className="text-center mb-7">
+                  <h1 className="text-3xl font-extrabold text-white mb-2 font-mono tracking-tight">Link a device</h1>
+                  <p className="text-xs text-zinc-400 font-mono">Choose your preferred method to link your device.</p>
+                </div>
 
-            </div>
+                {/* Checkboxes Section */}
+                <div className="space-y-3.5 mb-7">
+                  {/* Use Custom Session ID */}
+                  <div 
+                    onClick={() => setUseCustomSession(!useCustomSession)}
+                    className="flex items-center gap-3 cursor-pointer select-none group"
+                  >
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${useCustomSession ? 'bg-red-600 border-red-500 text-white' : 'border-zinc-700 bg-[#1c1c24] group-hover:border-zinc-500'}`}>
+                      {useCustomSession && (
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-xs font-mono font-medium text-zinc-200 group-hover:text-white transition">
+                      Use Custom Session ID
+                    </span>
+                  </div>
+
+                  {/* Custom Session Input */}
+                  {useCustomSession && (
+                    <div className="ml-8 space-y-1">
+                      <div className="flex items-center rounded-xl bg-[#0e0e12] border border-zinc-700/80 overflow-hidden focus-within:border-red-500 transition">
+                        <span className="px-3 text-xs font-mono text-zinc-500 bg-zinc-900/60 py-2 border-r border-zinc-800">
+                          lm7bos_
+                        </span>
+                        <input 
+                          type="text" 
+                          value={customSessionName} 
+                          onChange={(e) => setCustomSessionName(e.target.value)} 
+                          placeholder="ALMANIOS" 
+                          className="bg-transparent text-xs text-white font-mono px-3 py-2 w-full focus:outline-none"
+                        />
+                      </div>
+                      <p className="text-[11px] font-mono text-zinc-500">
+                        Result: <code className="text-red-400 font-mono">lm7bos_{customSessionName.trim() || 'ALMANIOS'}</code>
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Receive Session on WhatsApp */}
+                  <div 
+                    onClick={() => setReceiveOnWhatsApp(!receiveOnWhatsApp)}
+                    className="flex items-center gap-3 cursor-pointer select-none group"
+                  >
+                    <div className={`w-5 h-5 rounded border flex items-center justify-center transition ${receiveOnWhatsApp ? 'bg-red-600 border-red-500 text-white' : 'border-zinc-700 bg-[#1c1c24] group-hover:border-zinc-500'}`}>
+                      {receiveOnWhatsApp && (
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-xs font-mono font-medium text-zinc-200 group-hover:text-white transition">
+                      Receive Session on WhatsApp
+                    </span>
+                  </div>
+                </div>
+
+                {/* Select Connection Method Divider */}
+                <div className="relative my-7 text-center">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-zinc-800"></div>
+                  </div>
+                  <div className="relative">
+                    <span className="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
+                      Select Connection Method
+                    </span>
+                  </div>
+                </div>
+
+                {/* Two Large Cards: QR Code and Pairing Code */}
+                <div className="grid grid-cols-2 gap-3.5 mb-7">
+                  {/* QR Code Card */}
+                  <button 
+                    onClick={() => setShowQrModal(true)}
+                    className="p-5 rounded-2xl bg-[#20202a] hover:bg-[#272734] border border-zinc-800/80 text-left transition flex items-center gap-4 group cursor-pointer"
+                  >
+                    <div className="text-zinc-400 group-hover:text-white transition shrink-0">
+                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+                        <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+                        <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-sm font-mono mb-0.5">QR Code</h3>
+                      <p className="text-[11px] font-mono text-zinc-400">Scan with WhatsApp</p>
+                    </div>
+                  </button>
+
+                  {/* Pairing Code Card */}
+                  <button 
+                    onClick={() => {
+                      setPairCode('');
+                      setShowPairModal(true);
+                    }}
+                    className="p-5 rounded-2xl bg-[#20202a] hover:bg-[#272734] border border-zinc-800/80 text-left transition flex items-center gap-4 group cursor-pointer"
+                  >
+                    <div className="text-zinc-400 group-hover:text-white transition shrink-0">
+                      <svg className="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="7" y="3" width="14" height="15" rx="2"></rect>
+                        <path d="M3 7v12a2 2 0 0 0 2 2h12"></path>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-white text-sm font-mono mb-0.5">Pairing Code</h3>
+                      <p className="text-[11px] font-mono text-zinc-400">Use Phone Number</p>
+                    </div>
+                  </button>
+                </div>
+
+                {/* Warning Alert Boxes */}
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#201014] border border-[#3b171c] text-[#f87171] text-xs font-mono">
+                    <div className="w-5 h-5 rounded-full border border-red-500/80 flex items-center justify-center font-bold text-[11px] shrink-0">
+                      !
+                    </div>
+                    <span>You will not receive the session ID on WhatsApp, so copy it from here.</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#1e170c] border border-[#3b2a12] text-[#fbbf24] text-xs font-mono">
+                    <div className="w-5 h-5 rounded-full border border-amber-500/80 flex items-center justify-center font-bold text-[11px] shrink-0">
+                      i
+                    </div>
+                    <span>If connection fails, try using a VPN.</span>
+                  </div>
+                </div>
+
+              </div>
+            )}
           </div>
         )}
 
-        {/* MODAL 1: LINK WITH PAIRING CODE (Matches Screenshot 2) */}
+        {/* MODAL 1: LINK WITH PAIRING CODE (Matches Screenshot 1 Exactly) */}
         {showPairModal && (
-          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-[#121217] border border-zinc-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
               
               {/* Modal Header */}
-              <div className="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-5">
+              <div className="flex items-center justify-between pb-3 border-b border-zinc-800/80 mb-5">
                 <h3 className="text-sm font-bold text-white font-mono">Link with Pairing Code</h3>
                 <button 
-                  onClick={() => setShowPairModal(false)}
+                  onClick={() => {
+                    setShowPairModal(false);
+                    stopPolling();
+                  }}
                   className="text-zinc-400 hover:text-white p-1 rounded-lg transition"
                 >
                   <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -367,140 +535,168 @@ API_MODE="false"`;
                 </button>
               </div>
 
-              {/* Modal Body */}
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-sm font-bold text-white font-mono mb-1">Enter Phone Number</h4>
-                  <p className="text-xs text-zinc-400 font-mono">WhatsApp will generate a unique pairing code.</p>
-                </div>
-
-                {/* Phone Input with Phone Icon */}
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-                    </svg>
+              {!pairCode ? (
+                /* STEP 1: ENTER PHONE NUMBER */
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-white font-mono mb-1">Enter Phone Number</h4>
+                    <p className="text-xs text-zinc-400 font-mono">WhatsApp will generate a unique pairing code.</p>
                   </div>
-                  <input 
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    placeholder="e.g. +1 234 567 8900"
-                    className="w-full bg-[#0c0c10] border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-red-500"
-                  />
-                </div>
 
-                {/* Action Button */}
-                <button 
-                  onClick={handleRequestPairing}
-                  disabled={loading}
-                  className="w-full py-3 px-4 rounded-xl bg-[#1c1c24] hover:bg-[#242430] border border-zinc-700/80 text-white font-mono text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
-                >
-                  {loading ? (
-                    <>
-                      <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                      <span>Generating Code… (3-5s)</span>
-                    </>
-                  ) : (
-                    'Get Pairing Code'
-                  )}
-                </button>
-
-                {/* Results Section inside Modal */}
-                {pairCode && (
-                  <div className="pt-3 border-t border-zinc-800 space-y-3">
-                    <div className="text-center">
-                      <p className="text-[11px] font-mono text-zinc-400 mb-1">Your 8-Digit Code:</p>
-                      <div className="flex items-center justify-center gap-2">
-                        <div className="font-mono text-2xl font-extrabold tracking-widest text-red-400 bg-black/60 px-4 py-2 rounded-xl border border-red-900/60 select-all">
-                          {pairCode}
-                        </div>
-                        <button 
-                          onClick={copyCode}
-                          className="p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white transition text-xs font-mono"
-                        >
-                          {copiedCode ? '✓ Copied' : '📋 Copy'}
-                        </button>
-                      </div>
-                    </div>
-
-                    {generatedSessionId && (
-                      <div className="bg-black/60 border border-zinc-800 rounded-xl p-3">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-mono text-zinc-400">SESSION_ID:</span>
-                          <button 
-                            onClick={copySessionId} 
-                            className="text-[10px] font-mono text-red-400 hover:underline"
-                          >
-                            {copiedSessionId ? '✓ Copied' : 'Copy ID'}
-                          </button>
-                        </div>
-                        <code className="text-xs font-mono text-red-300 break-all block">
-                          {generatedSessionId}
-                        </code>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {pairError && (
-                  <div className="p-3 bg-red-950/40 border border-red-900/50 rounded-xl text-xs font-mono text-red-300">
-                    {pairError}
-                  </div>
-                )}
-
-                {/* How it works Divider */}
-                <div className="relative my-4 text-center">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-zinc-800"></div>
-                  </div>
                   <div className="relative">
-                    <span className="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
-                      How it works
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                      </svg>
+                    </div>
+                    <input 
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. +1 234 567 8900"
+                      className="w-full bg-[#0c0c10] border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-red-500"
+                    />
+                  </div>
+
+                  <button 
+                    onClick={handleRequestPairing}
+                    disabled={loading}
+                    className="w-full py-3 px-4 rounded-xl bg-[#1c1c24] hover:bg-[#242430] border border-zinc-700/80 text-white font-mono text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    {loading ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                        <span>Generating Code… (3-5s)</span>
+                      </>
+                    ) : (
+                      'Get Pairing Code'
+                    )}
+                  </button>
+
+                  {pairError && (
+                    <div className="p-3 bg-red-950/40 border border-red-900/50 rounded-xl text-xs font-mono text-red-300">
+                      {pairError}
+                    </div>
+                  )}
+
+                  {/* How it works Divider */}
+                  <div className="relative my-4 text-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-zinc-800"></div>
+                    </div>
+                    <div className="relative">
+                      <span className="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
+                        How it works
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs font-mono text-zinc-300">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">1</div>
+                      <span>Include your country code</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">2</div>
+                      <span>Click &quot;Get Pairing Code&quot;</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">3</div>
+                      <span>Open the WhatsApp notification</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">4</div>
+                      <span>Enter the code on your phone</span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* STEP 2: DISPLAY PAIRING CODE (Matches Screenshot 1 Exactly) */
+                <div className="space-y-5 text-center animate-fade-in">
+                  <div>
+                    <h4 className="text-xl font-bold text-white font-mono mb-1">Your Pairing Code</h4>
+                    <p className="text-xs text-zinc-400 font-mono">Enter this on your mobile device</p>
+                  </div>
+
+                  {/* Large Box with Spaced Glowing Electric Blue Characters */}
+                  <div className="bg-[#0c0c10] border border-zinc-800/90 rounded-2xl py-7 px-4 shadow-inner">
+                    <span className="text-2xl sm:text-4xl font-extrabold font-mono text-[#38bdf8] tracking-[0.25em] inline-block drop-shadow-[0_0_15px_rgba(56,189,248,0.4)] select-all">
+                      {formatCodeLetters(pairCode)}
                     </span>
                   </div>
+
+                  {/* Buttons Row: [Copy] and Change */}
+                  <div className="flex items-center justify-center gap-3">
+                    <button 
+                      onClick={copyCode}
+                      className="px-5 py-2.5 rounded-xl bg-[#20202a] hover:bg-[#272734] border border-zinc-700/80 text-white font-mono text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+                    >
+                      <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="7" y="3" width="14" height="15" rx="2"></rect>
+                        <path d="M3 7v12a2 2 0 0 0 2 2h12"></path>
+                      </svg>
+                      <span>{copiedCode ? '✓ Copied' : 'Copy'}</span>
+                    </button>
+                    <button 
+                      onClick={() => {
+                        setPairCode('');
+                        stopPolling();
+                      }}
+                      className="px-5 py-2.5 rounded-xl hover:bg-zinc-800/60 text-zinc-400 hover:text-white font-mono text-xs transition cursor-pointer"
+                    >
+                      Change
+                    </button>
+                  </div>
+
+                  {/* Linking Steps Divider */}
+                  <div className="relative my-4 text-center">
+                    <div className="absolute inset-0 flex items-center">
+                      <div className="w-full border-t border-zinc-800"></div>
+                    </div>
+                    <div className="relative">
+                      <span className="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
+                        Linking Steps
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Numbered Steps */}
+                  <div className="space-y-2.5 text-xs font-mono text-zinc-300 text-left">
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">1</div>
+                      <span>Go to Linked Devices in Settings</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">2</div>
+                      <span>Tap &quot;Link with phone instead&quot;</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">3</div>
+                      <span>Enter the 8-character code</span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Connection Status / Finalizing Pill */}
+                  <div className="pt-2">
+                    <button
+                      onClick={() => finalizeSession(generatedSessionId || getComputedSessionId())}
+                      className="w-full py-3.5 px-4 rounded-xl bg-[#12161f] hover:bg-[#18202d] border border-[#1e293b] text-[#38bdf8] text-xs font-mono font-bold flex items-center justify-center gap-2.5 shadow-lg transition cursor-pointer"
+                      title="Click to finalize and save session"
+                    >
+                      <span className="w-3.5 h-3.5 border-2 border-[#38bdf8] border-t-transparent rounded-full animate-spin"></span>
+                      <span className="tracking-wide">{connectionStatus}</span>
+                    </button>
+                  </div>
                 </div>
-
-                {/* Numbered Steps */}
-                <div className="space-y-2.5 text-xs font-mono text-zinc-300">
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                      1
-                    </div>
-                    <span>Include your country code</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                      2
-                    </div>
-                    <span>Click &quot;Get Pairing Code&quot;</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                      3
-                    </div>
-                    <span>Open the WhatsApp notification</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <div className="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                      4
-                    </div>
-                    <span>Enter the code on your phone</span>
-                  </div>
-                </div>
-
-              </div>
+              )}
 
             </div>
           </div>
         )}
 
-        {/* MODAL 2: LINK WITH QR CODE (Matches Screenshot 3) */}
+        {/* MODAL 2: LINK WITH QR CODE */}
         {showQrModal && (
-          <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-[#121217] border border-zinc-800 rounded-2xl w-full max-w-xl p-6 relative shadow-2xl">
               
               {/* Modal Header */}
@@ -520,7 +716,6 @@ API_MODE="false"`;
               {/* Modal Body: Left steps + Right QR */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
                 
-                {/* Left Side: How to scan instructions */}
                 <div className="space-y-3 font-mono text-xs">
                   <h4 className="text-sm font-bold text-white mb-2">How to scan</h4>
                   
@@ -556,7 +751,6 @@ API_MODE="false"`;
                   </p>
                 </div>
 
-                {/* Right Side: QR Code in white rounded card */}
                 <div className="flex justify-center">
                   <div className="bg-white p-4 rounded-2xl shadow-xl flex items-center justify-center">
                     <img 
@@ -602,7 +796,7 @@ API_MODE="false"`;
                   href="https://app.koyeb.com/deploy?type=git&repository=github.com/ADAM0S999/lm7bos&branch=main&name=adam-bot" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="block w-full py-2.5 px-4 rounded-xl bg-red-700 hover:bg-red-600 text-white font-semibold text-center text-xs transition"
+                  className="block w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-center text-xs transition"
                 >
                   🚀 Deploy on Koyeb
                 </a>
@@ -610,31 +804,23 @@ API_MODE="false"`;
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
                 <h3 className="font-bold text-white text-base mb-1">Railway</h3>
-                <p className="text-xs text-zinc-400 mb-4">Integrated PostgreSQL database and automatic rebuilds.</p>
+                <p className="text-xs text-zinc-400 mb-4">Fast continuous delivery with automatic health checks.</p>
                 <a 
                   href="https://railway.app/new" 
                   target="_blank" 
                   rel="noreferrer"
-                  className="block w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-center text-xs transition"
+                  className="block w-full py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-center text-xs transition border border-zinc-700"
                 >
                   🚀 Deploy on Railway
                 </a>
               </div>
 
               <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-white text-base">CockroachDB Cloud</h3>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950 text-red-300 border border-red-800">Free Cluster</span>
+                <h3 className="font-bold text-white text-base mb-1">VPS / Ubuntu</h3>
+                <p className="text-xs text-zinc-400 mb-4">Deploy with Docker or PM2 on your own Linux server.</p>
+                <div className="bg-black/50 p-2.5 rounded-lg border border-zinc-800 font-mono text-[11px] text-zinc-300">
+                  <code>git clone ... &amp;&amp; npm start</code>
                 </div>
-                <p className="text-xs text-zinc-400 mb-4">Free serverless PostgreSQL database with zero maintenance. Perfect for persistent bot database.</p>
-                <a 
-                  href="https://cockroachlabs.cloud/clusters" 
-                  target="_blank" 
-                  rel="noreferrer"
-                  className="block w-full py-2.5 px-4 rounded-xl bg-red-800 hover:bg-red-700 text-white font-semibold text-center text-xs transition"
-                >
-                  🗄️ Get Free Cluster (CockroachDB)
-                </a>
               </div>
             </div>
           </div>
@@ -642,42 +828,31 @@ API_MODE="false"`;
 
         {/* TAB 3: PLUGINS */}
         {activeTab === 'plugins' && (
-          <div>
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-between">
               <div>
-                <h1 className="text-2xl font-bold text-white">Community Plugins</h1>
-                <p className="text-xs text-zinc-400">Discover and install plugins to extend your bot commands.</p>
+                <h2 className="text-2xl font-bold text-white">Plugin Catalog</h2>
+                <p className="text-xs text-zinc-400">Official and verified community plugins for ADAM.</p>
               </div>
               <input 
                 type="text" 
-                value={pluginSearch} 
-                onChange={(e) => setPluginSearch(e.target.value)} 
                 placeholder="Search plugins..." 
-                className="bg-zinc-900 border border-zinc-700 rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder-zinc-500 focus:outline-none focus:border-red-500 w-full sm:w-64"
+                value={pluginSearch}
+                onChange={(e) => setPluginSearch(e.target.value)}
+                className="w-full sm:w-64 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2 text-xs text-white placeholder-zinc-500 focus:outline-none focus:border-red-500"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredPlugins.map((plugin, i) => (
-                <div key={i} className="bg-zinc-900 border border-zinc-800 rounded-xl p-5 hover:border-red-500/40 transition">
+              {filteredPlugins.map((plugin, idx) => (
+                <div key={idx} className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 hover:border-zinc-700 transition">
                   <div className="flex items-center justify-between mb-2">
-                    <h4 className="font-bold text-white text-sm">{plugin.name}</h4>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800">
-                      {plugin.cat}
-                    </span>
+                    <h3 className="font-bold text-white text-sm">{plugin.name}</h3>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono">{plugin.cat}</span>
                   </div>
-                  <p className="text-xs text-zinc-400 mb-4">{plugin.desc}</p>
-                  <div className="flex items-center justify-between gap-2 bg-black/60 rounded-lg p-2 font-mono text-[11px] text-zinc-300">
-                    <span className="truncate">{plugin.cmd}</span>
-                    <button 
-                      onClick={() => {
-                        navigator.clipboard.writeText(plugin.cmd);
-                        alert('Install command copied to clipboard!');
-                      }}
-                      className="text-red-400 hover:text-red-300 shrink-0 font-sans font-medium px-2 py-0.5 bg-zinc-800 rounded"
-                    >
-                      Copy
-                    </button>
+                  <p className="text-xs text-zinc-400 mb-3">{plugin.desc}</p>
+                  <div className="bg-black/40 border border-zinc-800 rounded-lg p-2 font-mono text-[11px] text-red-400 select-all">
+                    {plugin.cmd}
                   </div>
                 </div>
               ))}
@@ -685,115 +860,80 @@ API_MODE="false"`;
           </div>
         )}
 
-        {/* TAB 4: CONFIG */}
+        {/* TAB 4: CONFIG GENERATOR */}
         {activeTab === 'config' && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
-              <h3 className="font-bold text-white text-base">⚙️ Environment Variables</h3>
-              
-              <div className="space-y-3 text-xs">
+          <div className="space-y-6">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white mb-1">Configuration Generator</h2>
+              <p className="text-xs text-zinc-400">Generate your production ready config.env file.</p>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 space-y-4">
                 <div>
-                  <label className="block text-zinc-300 mb-1">SESSION_ID (Required)</label>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">SESSION_ID</label>
                   <input 
                     type="text" 
-                    value={configValues.sessionId} 
-                    onChange={(e) => handleConfigChange('sessionId', e.target.value)} 
-                    placeholder="lm7bos_adam" 
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-zinc-300 mb-1">PREFIX</label>
-                    <input 
-                      type="text" 
-                      value={configValues.prefix} 
-                      onChange={(e) => handleConfigChange('prefix', e.target.value)} 
-                      className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-zinc-300 mb-1">LANGUAGE</label>
-                    <select 
-                      value={configValues.lang} 
-                      onChange={(e) => handleConfigChange('lang', e.target.value)} 
-                      className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
-                    >
-                      <option value="en">English (en)</option>
-                      <option value="ar">Arabic (ar)</option>
-                      <option value="es">Spanish (es)</option>
-                      <option value="fr">French (fr)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-zinc-300 mb-1">STICKER PACKNAME</label>
-                  <input 
-                    type="text" 
-                    value={configValues.packname} 
-                    onChange={(e) => handleConfigChange('packname', e.target.value)} 
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
+                    value={recentSession?.sessionId || configValues.sessionId} 
+                    onChange={(e) => handleConfigChange('sessionId', e.target.value)}
+                    placeholder="lm7bos_..."
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-red-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-zinc-300 mb-1">SUDO NUMBERS</label>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">PREFIX</label>
+                  <input 
+                    type="text" 
+                    value={configValues.prefix} 
+                    onChange={(e) => handleConfigChange('prefix', e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-red-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">SUDO NUMBERS (comma separated)</label>
                   <input 
                     type="text" 
                     value={configValues.sudo} 
-                    onChange={(e) => handleConfigChange('sudo', e.target.value)} 
-                    placeholder="212612345678,14150000000" 
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
+                    onChange={(e) => handleConfigChange('sudo', e.target.value)}
+                    placeholder="212612345678, 212687654321"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-red-500"
                   />
                 </div>
 
                 <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="text-zinc-300">DATABASE_URL (CockroachDB / PostgreSQL)</label>
-                    <a href="https://cockroachlabs.cloud/clusters" target="_blank" rel="noreferrer" className="text-red-400 hover:underline text-[11px]">Get Free Cluster ↗</a>
-                  </div>
-                  <input 
-                    type="text" 
-                    value={configValues.databaseUrl} 
-                    onChange={(e) => handleConfigChange('databaseUrl', e.target.value)} 
-                    placeholder="postgresql://user:pass@cluster.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full" 
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
-                  />
-                  <p className="text-[11px] text-zinc-500 mt-1">Leave empty for SQLite, or create a free cluster at CockroachDB Cloud.</p>
-                </div>
-
-                <div>
-                  <label className="block text-zinc-300 mb-1">GEMINI API KEY</label>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1">GEMINI_API_KEY</label>
                   <input 
                     type="password" 
                     value={configValues.geminiKey} 
-                    onChange={(e) => handleConfigChange('geminiKey', e.target.value)} 
-                    placeholder="AIzaSy..." 
-                    className="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono"
+                    onChange={(e) => handleConfigChange('geminiKey', e.target.value)}
+                    placeholder="AIzaSy..."
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-xl px-3 py-2 text-xs font-mono text-white focus:outline-none focus:border-red-500"
                   />
                 </div>
               </div>
-            </div>
 
-            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between">
-              <div>
-                <h3 className="font-bold text-white text-base mb-3">📄 Generated config.env</h3>
-                <pre className="bg-black/80 rounded-xl p-4 font-mono text-xs text-red-400 overflow-x-auto border border-zinc-800 h-80">
-                  {envPreview}
-                </pre>
-              </div>
-
-              <div className="flex items-center gap-3 mt-4 pt-4 border-t border-zinc-800">
+              {/* Preview */}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between">
+                <div>
+                  <h3 className="text-xs font-mono text-zinc-400 mb-2">config.env Preview:</h3>
+                  <pre className="bg-black/60 border border-zinc-800 rounded-xl p-4 text-[11px] font-mono text-zinc-300 overflow-x-auto whitespace-pre">
+                    {envPreview}
+                  </pre>
+                </div>
                 <button 
                   onClick={() => {
-                    navigator.clipboard.writeText(envPreview);
-                    alert('config.env copied!');
+                    const blob = new Blob([envPreview], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'config.env';
+                    a.click();
                   }}
-                  className="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition"
+                  className="mt-4 w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-500 text-white font-mono text-xs font-semibold transition"
                 >
-                  📋 Copy config.env
+                  💾 Download config.env
                 </button>
               </div>
             </div>

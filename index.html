@@ -15,737 +15,63 @@
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-            mono: ['"Geist Mono"', 'monospace'],
-          },
-          colors: {
-            zinc: {
-              850: '#1e1e24',
-              900: '#121217',
-              950: '#09090b',
-            },
-            red: {
-              400: '#f87171',
-              500: '#ef4444',
-              600: '#dc2626',
-            }
-          }
-        }
-      }
-    }
-  </script>
-  <style>
-    body {
-      background-color: #09090b;
-      color: #f4f4f5;
-    }
-    .glow-red {
-      box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.35);
-    }
-    .glow-box {
-      border: 1px solid rgba(6, 182, 212, 0.2);
-      background: radial-gradient(circle at top, rgba(6, 182, 212, 0.05) 0%, rgba(9, 9, 11, 0.8) 100%);
-    }
-  </style>
-</head>
-<body class="min-h-screen flex flex-col font-sans selection:bg-red-500 selection:text-black">
-
-  <!-- Header / Navigation -->
-  <header class="border-b border-zinc-800/80 sticky top-0 bg-zinc-950/80 backdrop-blur-md z-50">
-    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-red-600 to-red-400 flex items-center justify-center font-extrabold text-black text-xl shadow-lg shadow-red-500/20">
-          🤖
-        </div>
-        <div>
-          <span class="font-bold text-lg tracking-tight text-white flex items-center gap-2">
-            ADAM <span class="text-xs px-2 py-0.5 rounded-full bg-red-600 text-red-400 border border-red-500 font-mono">v1.0.0</span>
-          </span>
-        </div>
-      </div>
-
-      <!-- Nav Tabs -->
-      <nav class="hidden md:flex items-center gap-1 text-sm text-zinc-400">
-        <button onclick="switchTab('pairing')" class="tab-btn active px-3.5 py-1.5 rounded-lg text-white font-medium hover:text-white transition" data-tab="pairing">
-          🔑 Session
-        </button>
-        <button onclick="switchTab('deploy')" class="tab-btn px-3.5 py-1.5 rounded-lg hover:text-white transition" data-tab="deploy">
-          🚀 1-Click Deploy
-        </button>
-        <button onclick="switchTab('config')" class="tab-btn px-3.5 py-1.5 rounded-lg hover:text-white transition" data-tab="config">
-          ⚙️ Config Generator
-        </button>
-        <button onclick="switchTab('plugins')" class="tab-btn px-3.5 py-1.5 rounded-lg hover:text-white transition" data-tab="plugins">
-          🧩 Plugins
-        </button>
-        <button onclick="switchTab('api')" class="tab-btn px-3.5 py-1.5 rounded-lg hover:text-white transition" data-tab="api">
-          📡 API & Docs
-        </button>
-      </nav>
-
-      <div class="flex items-center gap-3">
-        <a href="https://github.com/ADAM0S999/lm7bos" target="_blank" class="flex items-center gap-2 text-xs font-mono px-3.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700/80 text-zinc-200 transition">
-          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
-          GitHub
-        </a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Container -->
-  <main class="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
-    
-    <!-- Hero Banner -->
-    <div class="text-center mb-10 py-6">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-600/60 border border-red-500/80 text-red-400 text-xs font-mono mb-4">
-        <span class="w-2 h-2 rounded-full bg-red-400 animate-pulse"></span>
-        Vercel Serverless Ready & Cloud Deployable
-      </div>
-      <h1 class="text-4xl md:text-5xl font-extrabold tracking-tight text-white mb-3">
-        🤖 ADAM <span class="bg-gradient-to-r from-red-400 to-red-400 bg-clip-text text-transparent">WhatsApp Platform</span>
-      </h1>
-      <p class="text-zinc-400 max-w-2xl mx-auto text-sm md:text-base">
-        Generate your WhatsApp 8-digit Pairing Code instantly, create your <code class="font-mono text-red-400">SESSION_ID</code>, configure environment variables, and deploy to your cloud host with one click.
-      </p>
-    </div>
-
-    <!-- Mobile Navigation Selector -->
-    <div class="md:hidden mb-6 flex overflow-x-auto gap-2 pb-2">
-      <button onclick="switchTab('pairing')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="pairing">🔑 Session</button>
-      <button onclick="switchTab('deploy')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="deploy">🚀 Deploy</button>
-      <button onclick="switchTab('config')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="config">⚙️ Config</button>
-      <button onclick="switchTab('plugins')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="plugins">🧩 Plugins</button>
-      <button onclick="switchTab('api')" class="tab-btn px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-medium whitespace-nowrap" data-tab="api">📡 API</button>
-    </div>
-
-    <!-- TAB 1: LINK A DEVICE / MODALS (Matches Screenshots 1, 2, 3) -->
-    <section id="tab-pairing" class="tab-content block">
-      <div class="max-w-xl mx-auto">
-        <div class="bg-[#121217] border border-zinc-800/90 rounded-2xl p-7 md:p-9 shadow-2xl">
-          
-          <!-- Header -->
-          <div class="text-center mb-7">
-            <h1 class="text-3xl font-extrabold text-white mb-2 font-mono tracking-tight">Link a device</h1>
-            <p class="text-xs text-zinc-400 font-mono">Choose your preferred method to link your device.</p>
-          </div>
-
-          <!-- Checkboxes Section -->
-          <div class="space-y-3.5 mb-7">
-            <!-- Use Custom Session ID -->
-            <div onclick="toggleCustomSession()" class="flex items-center gap-3 cursor-pointer select-none group">
-              <div id="chk-custom-session" class="w-5 h-5 rounded border border-zinc-700 bg-[#1c1c24] flex items-center justify-center transition group-hover:border-zinc-500">
-              </div>
-              <span class="text-xs font-mono font-medium text-zinc-200 group-hover:text-white transition">
-                Use Custom Session ID
-              </span>
-            </div>
-
-            <!-- Custom Session Input -->
-            <div id="custom-session-box" class="hidden ml-8 space-y-1">
-              <div class="flex items-center rounded-xl bg-[#0e0e12] border border-zinc-700/80 overflow-hidden focus-within:border-red-500 transition">
-                <span class="px-3 text-xs font-mono text-zinc-500 bg-zinc-900/60 py-2 border-r border-zinc-800">
-                  lm7bos_
-                </span>
-                <input 
-                  id="session-name-input"
-                  type="text" 
-                  placeholder="adam" 
-                  oninput="updateSessionPreview()"
-                  class="bg-transparent text-xs text-white font-mono px-3 py-2 w-full focus:outline-none"
-                />
-              </div>
-              <p class="text-[11px] font-mono text-zinc-500">
-                Result: <code id="session-preview" class="text-red-400 font-mono">lm7bos_adam</code>
-              </p>
-            </div>
-
-            <!-- Receive Session on WhatsApp -->
-            <div onclick="toggleReceiveWA()" class="flex items-center gap-3 cursor-pointer select-none group">
-              <div id="chk-receive-wa" class="w-5 h-5 rounded border border-zinc-700 bg-[#1c1c24] flex items-center justify-center transition group-hover:border-zinc-500">
-              </div>
-              <span class="text-xs font-mono font-medium text-zinc-200 group-hover:text-white transition">
-                Receive Session on WhatsApp
-              </span>
-            </div>
-          </div>
-
-          <!-- Select Connection Method Divider -->
-          <div class="relative my-7 text-center">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-zinc-800"></div>
-            </div>
-            <div class="relative">
-              <span class="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
-                Select Connection Method
-              </span>
-            </div>
-          </div>
-
-          <!-- Two Big Cards: QR Code and Pairing Code -->
-          <div class="grid grid-cols-2 gap-3.5 mb-7">
-            <!-- QR Code Card -->
-            <button 
-              type="button"
-              onclick="openQrModal()"
-              class="p-5 rounded-2xl bg-[#20202a] hover:bg-[#272734] border border-zinc-800/80 text-left transition flex items-center gap-4 group cursor-pointer"
-            >
-              <div class="text-zinc-400 group-hover:text-white transition shrink-0">
-                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
-                  <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
-                  <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
-                  <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-sm font-mono mb-0.5">QR Code</h3>
-                <p class="text-[11px] font-mono text-zinc-400">Scan with WhatsApp</p>
-              </div>
-            </button>
-
-            <!-- Pairing Code Card -->
-            <button 
-              type="button"
-              onclick="openPairModal()"
-              class="p-5 rounded-2xl bg-[#20202a] hover:bg-[#272734] border border-zinc-800/80 text-left transition flex items-center gap-4 group cursor-pointer"
-            >
-              <div class="text-zinc-400 group-hover:text-white transition shrink-0">
-                <svg class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <rect x="7" y="3" width="14" height="15" rx="2"></rect>
-                  <path d="M3 7v12a2 2 0 0 0 2 2h12"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-sm font-mono mb-0.5">Pairing Code</h3>
-                <p class="text-[11px] font-mono text-zinc-400">Use Phone Number</p>
-              </div>
-            </button>
-          </div>
-
-          <!-- Warning Alert Boxes (Exactly matching Screenshot 1) -->
-          <div class="space-y-3">
-            <div class="flex items-center gap-3 p-3.5 rounded-xl bg-[#201014] border border-[#3b171c] text-[#f87171] text-xs font-mono">
-              <div class="w-5 h-5 rounded-full border border-red-500/80 flex items-center justify-center font-bold text-[11px] shrink-0">
-                !
-              </div>
-              <span>You will not receive the session ID on WhatsApp, so copy it from here.</span>
-            </div>
-
-            <div class="flex items-center gap-3 p-3.5 rounded-xl bg-[#1e170c] border border-[#3b2a12] text-[#fbbf24] text-xs font-mono">
-              <div class="w-5 h-5 rounded-full border border-amber-500/80 flex items-center justify-center font-bold text-[11px] shrink-0">
-                i
-              </div>
-              <span>If connection fails, try using a VPN.</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    </section>
-
-    <!-- MODAL 1: LINK WITH PAIRING CODE (Matches Screenshot 2) -->
-    <div id="modal-pair" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-[#121217] border border-zinc-800 rounded-2xl w-full max-w-md p-6 relative shadow-2xl">
-        
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-5">
-          <h3 class="text-sm font-bold text-white font-mono">Link with Pairing Code</h3>
-          <button 
-            type="button"
-            onclick="closePairModal()"
-            class="text-zinc-400 hover:text-white p-1 rounded-lg transition"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="space-y-4">
-          <div>
-            <h4 class="text-sm font-bold text-white font-mono mb-1">Enter Phone Number</h4>
-            <p class="text-xs text-zinc-400 font-mono">WhatsApp will generate a unique pairing code.</p>
-          </div>
-
-          <!-- Phone Input with Phone Icon -->
-          <div class="relative">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-zinc-500">
-              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
-              </svg>
-            </div>
-            <input 
-              id="phone-input"
-              type="tel" 
-              placeholder="e.g. +1 234 567 8900"
-              class="w-full bg-[#0c0c10] border border-zinc-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white font-mono placeholder-zinc-600 focus:outline-none focus:border-red-500"
-            />
-          </div>
-
-          <!-- Action Button -->
-          <button 
-            id="pair-btn"
-            type="button"
-            onclick="requestPairingCode()"
-            class="w-full py-3 px-4 rounded-xl bg-[#1c1c24] hover:bg-[#242430] border border-zinc-700/80 text-white font-mono text-sm font-semibold transition flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <span id="btn-spinner" class="hidden w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            <span id="btn-text">Get Pairing Code</span>
-          </button>
-
-          <!-- Results inside modal -->
-          <div id="pair-result" class="hidden pt-3 border-t border-zinc-800 space-y-3">
-            <div class="text-center">
-              <p class="text-[11px] font-mono text-zinc-400 mb-1">Your 8-Digit Code:</p>
-              <div class="flex items-center justify-center gap-2">
-                <div id="code-display" class="font-mono text-2xl font-extrabold tracking-widest text-red-400 bg-black/60 px-4 py-2 rounded-xl border border-red-900/60 select-all">
-                  ---- ----
-                </div>
-                <button 
-                  type="button"
-                  onclick="copyCode()"
-                  class="p-2.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 rounded-xl text-zinc-300 hover:text-white transition text-xs font-mono"
-                >
-                  📋 Copy
-                </button>
-              </div>
-            </div>
-
-            <div class="bg-black/60 border border-zinc-800 rounded-xl p-3">
-              <div class="flex items-center justify-between mb-1">
-                <span class="text-[11px] font-mono text-zinc-400">SESSION_ID:</span>
-                <button 
-                  type="button"
-                  onclick="copySessionId()" 
-                  class="text-[10px] font-mono text-red-400 hover:underline"
-                >
-                  Copy ID
-                </button>
-              </div>
-              <code id="session-display" class="text-xs font-mono text-red-300 break-all block">
-                lm7bos_...
-              </code>
-            </div>
-          </div>
-
-          <div id="pair-error" class="hidden p-3 bg-red-950/40 border border-red-900/50 rounded-xl text-xs font-mono text-red-300"></div>
-
-          <!-- How it works Divider -->
-          <div class="relative my-4 text-center">
-            <div class="absolute inset-0 flex items-center">
-              <div class="w-full border-t border-zinc-800"></div>
-            </div>
-            <div class="relative">
-              <span class="bg-[#121217] px-3 text-[11px] font-mono text-zinc-500">
-                How it works
-              </span>
-            </div>
-          </div>
-
-          <!-- Numbered Steps -->
-          <div class="space-y-2.5 text-xs font-mono text-zinc-300">
-            <div class="flex items-center gap-3">
-              <div class="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                1
-              </div>
-              <span>Include your country code</span>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                2
-              </div>
-              <span>Click &quot;Get Pairing Code&quot;</span>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                3
-              </div>
-              <span>Open the WhatsApp notification</span>
-            </div>
-
-            <div class="flex items-center gap-3">
-              <div class="w-5 h-5 rounded-md bg-[#1c1c24] border border-zinc-700/80 flex items-center justify-center font-bold text-[11px] text-white shrink-0">
-                4
-              </div>
-              <span>Enter the code on your phone</span>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </div>
-
-    <!-- MODAL 2: LINK WITH QR CODE (Matches Screenshot 3) -->
-    <div id="modal-qr" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-      <div class="bg-[#121217] border border-zinc-800 rounded-2xl w-full max-w-xl p-6 relative shadow-2xl">
-        
-        <!-- Modal Header -->
-        <div class="flex items-center justify-between pb-4 border-b border-zinc-800/80 mb-5">
-          <h3 class="text-sm font-bold text-white font-mono">Link with QR Code</h3>
-          <button 
-            type="button"
-            onclick="closeQrModal()"
-            class="text-zinc-400 hover:text-white p-1 rounded-lg transition"
-          >
-            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Modal Body: Left steps + Right QR -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
-          
-          <!-- Left Side: How to scan instructions -->
-          <div class="space-y-3 font-mono text-xs">
-            <h4 class="text-sm font-bold text-white mb-2">How to scan</h4>
-            
-            <div class="space-y-2 text-zinc-300">
-              <div class="flex items-start gap-2">
-                <span class="font-bold text-white">1.</span>
-                <span>Open WhatsApp on your phone</span>
-              </div>
-
-              <div class="flex items-start gap-2">
-                <span class="font-bold text-white">2.</span>
-                <span>Tap Menu (⋮) or Settings</span>
-              </div>
-
-              <div class="flex items-start gap-2">
-                <span class="font-bold text-white">3.</span>
-                <span>Tap Linked Devices</span>
-              </div>
-
-              <div class="flex items-start gap-2">
-                <span class="font-bold text-white">4.</span>
-                <span>Tap Link a device</span>
-              </div>
-
-              <div class="flex items-start gap-2">
-                <span class="font-bold text-white">5.</span>
-                <span>Point your phone at this QR code</span>
-              </div>
-            </div>
-
-            <p class="text-[11px] text-zinc-500 pt-2 border-t border-zinc-800/80">
-              Session: <code id="qr-session-preview" class="text-red-400">lm7bos_session</code>
-            </p>
-          </div>
-
-          <!-- Right Side: QR Code in white rounded card -->
-          <div class="flex justify-center">
-            <div class="bg-white p-4 rounded-2xl shadow-xl flex items-center justify-center">
-              <img 
-                id="qr-image"
-                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&margin=0&data=ADAM_BOT_PAIRING"
-                alt="WhatsApp QR Code"
-                className="w-48 h-48 block"
-              />
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-    </div>
-    <!-- TAB 2: 1-CLICK DEPLOY -->
-    <section id="tab-deploy" class="tab-content hidden">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        
-        <!-- Render -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 hover:border-red-500/50 transition">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-indigo-950 flex items-center justify-center font-bold text-indigo-400">
-                ☁️
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-base">Render</h3>
-                <span class="text-xs text-zinc-400">Free 24/7 Web Service</span>
-              </div>
-            </div>
-            <span class="text-[11px] px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800 font-mono">Recommended</span>
-          </div>
-          <p class="text-xs text-zinc-400 mb-6">Deploy ADAM with native Docker support and continuous uptime. Perfect for personal or group bots.</p>
-          <a href="https://render.com/deploy?repo=https://github.com/ADAM0S999/lm7bos" target="_blank" class="block w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-center text-xs transition">
-            🚀 Deploy to Render
-          </a>
-        </div>
-
-        <!-- Koyeb -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 hover:border-red-500/50 transition">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-purple-950 flex items-center justify-center font-bold text-purple-400">
-                🤖
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-base">Koyeb</h3>
-                <span class="text-xs text-zinc-400">Global Serverless Containers</span>
-              </div>
-            </div>
-            <span class="text-[11px] px-2 py-0.5 rounded bg-purple-950 text-purple-400 border border-purple-800 font-mono">High Speed</span>
-          </div>
-          <p class="text-xs text-zinc-400 mb-6">Ultra-fast worldwide deployment with zero configuration. Instant startup from GitHub repository.</p>
-          <a href="https://app.koyeb.com/deploy?type=git&repository=github.com/ADAM0S999/lm7bos&branch=main&name=adam-bot" target="_blank" class="block w-full py-2.5 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-semibold text-center text-xs transition">
-            🚀 Deploy to Koyeb
-          </a>
-        </div>
-
-        <!-- Railway -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 hover:border-red-500/50 transition">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-rose-950 flex items-center justify-center font-bold text-rose-400">
-                🚂
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-base">Railway</h3>
-                <span class="text-xs text-zinc-400">Automatic Deployments</span>
-              </div>
-            </div>
-          </div>
-          <p class="text-xs text-zinc-400 mb-6">Effortless infrastructure with integrated PostgreSQL database for warnings and chat logs.</p>
-          <a href="https://railway.app/new" target="_blank" class="block w-full py-2.5 px-4 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold text-center text-xs transition">
-            🚀 Deploy to Railway
-          </a>
-        </div>
-
-                <!-- CockroachDB Cloud -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 hover:border-purple-500/50 transition">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-purple-950 flex items-center justify-center font-bold text-purple-400">
-                🗄️
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-base">CockroachDB Cloud</h3>
-                <span class="text-xs text-zinc-400">Free Serverless DB</span>
-              </div>
-            </div>
-            <span class="text-[11px] px-2 py-0.5 rounded bg-purple-950 text-purple-400 border border-purple-800 font-mono">PostgreSQL</span>
-          </div>
-          <p class="text-xs text-zinc-400 mb-6">Persistent cloud database with zero ops. One-click setup for warnings, filters, and chat state.</p>
-          <a href="https://cockroachlabs.cloud/clusters" target="_blank" class="block w-full py-2.5 px-4 rounded-xl bg-purple-700 hover:bg-purple-600 text-white font-semibold text-center text-xs transition">
-            🗄️ Get Free Cluster (CockroachDB)
-          </a>
-        </div>
-
-        <!-- VPS / Ubuntu / Docker -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 hover:border-red-500/50 transition">
-          <div class="flex items-center justify-between mb-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center font-bold text-red-400">
-                💻
-              </div>
-              <div>
-                <h3 class="font-bold text-white text-base">VPS / Docker</h3>
-                <span class="text-xs text-zinc-400">Ubuntu, Debian, or Windows</span>
-              </div>
-            </div>
-            <span class="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono">100% Control</span>
-          </div>
-          <p class="text-xs text-zinc-400 mb-4">Run directly on your server with PM2 or Docker container:</p>
-          <div class="bg-black/60 rounded-lg p-2.5 font-mono text-[11px] text-red-300 overflow-x-auto flex items-center justify-between">
-            <code>git clone https://github.com/ADAM0S999/lm7bos && cd dodo && npm i && npm start</code>
-            <button onclick="navigator.clipboard.writeText('git clone https://github.com/ADAM0S999/lm7bos && cd dodo && npm i && npm start'); alert('Command copied!')" class="ml-2 px-2 py-1 bg-zinc-800 rounded text-zinc-300 hover:text-white">Copy</button>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- TAB 3: CONFIG GENERATOR -->
-    <section id="tab-config" class="tab-content hidden">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        
-        <!-- Controls -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 space-y-4">
-          <h3 class="font-bold text-white text-base flex items-center gap-2">
-            <span>⚙️</span> Bot Configuration
-          </h3>
-          <p class="text-xs text-zinc-400">Fill in your values to generate your ready-to-use <code class="font-mono text-red-400">config.env</code>.</p>
-
-          <div class="space-y-3 text-xs">
-            <div>
-              <label class="block font-medium text-zinc-300 mb-1">SESSION_ID (Required)</label>
-              <input id="cfg-session" oninput="updateEnvPreview()" type="text" placeholder="adam_session_..." class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono" />
-            </div>
-
-            <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block font-medium text-zinc-300 mb-1">COMMAND PREFIX</label>
-                <input id="cfg-prefix" oninput="updateEnvPreview()" type="text" value="." class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono" />
-              </div>
-              <div>
-                <label class="block font-medium text-zinc-300 mb-1">BOT LANGUAGE</label>
-                <select id="cfg-lang" onchange="updateEnvPreview()" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono">
-                  <option value="en">English (en)</option>
-                  <option value="ar">Arabic (ar)</option>
-                  <option value="es">Spanish (es)</option>
-                  <option value="fr">French (fr)</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label class="block font-medium text-zinc-300 mb-1">STICKER PACKNAME</label>
-              <input id="cfg-pack" oninput="updateEnvPreview()" type="text" value="🤖,ADAM" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono" />
-            </div>
-
-            <div>
-              <label class="block font-medium text-zinc-300 mb-1">SUDO NUMBERS (Comma separated)</label>
-              <input id="cfg-sudo" oninput="updateEnvPreview()" type="text" placeholder="212612345678,14150000000" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono" />
-            </div>
-
-                        <div>
-              <div class="flex items-center justify-between mb-1">
-                <label class="block font-medium text-zinc-300">DATABASE_URL (CockroachDB / PostgreSQL)</label>
-                <a href="https://cockroachlabs.cloud/clusters" target="_blank" class="text-red-400 hover:underline text-[11px]">Get Free Cluster ↗</a>
-              </div>
-              <input id="cfg-db" oninput="updateEnvPreview()" type="text" placeholder="postgresql://user:pass@cluster.cockroachlabs.cloud:26257/defaultdb?sslmode=verify-full" class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono" />
-              <p class="text-[11px] text-zinc-500 mt-1">Leave empty for SQLite, or paste your CockroachDB connection string.</p>
-            </div>
-
-            <div>
-              <label class="block font-medium text-zinc-300 mb-1">GOOGLE GEMINI API KEY (Optional)</label>
-              <input id="cfg-gemini" oninput="updateEnvPreview()" type="password" placeholder="AIzaSy..." class="w-full bg-zinc-950 border border-zinc-700 rounded-lg px-3 py-2 text-white font-mono" />
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 pt-2">
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input id="cfg-auto-view" onchange="updateEnvPreview()" type="checkbox" class="rounded bg-zinc-950 border-zinc-700 text-red-500 focus:ring-0">
-                <span class="text-zinc-300">Auto Status View</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input id="cfg-reject-call" onchange="updateEnvPreview()" type="checkbox" class="rounded bg-zinc-950 border-zinc-700 text-red-500 focus:ring-0">
-                <span class="text-zinc-300">Auto Reject Calls</span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Preview & Download -->
-        <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="font-bold text-white text-base">📄 Live config.env Preview</h3>
-              <span class="text-[10px] font-mono text-zinc-500">READY TO COPY</span>
-            </div>
-            <pre id="env-preview" class="bg-black/80 rounded-xl p-4 font-mono text-xs text-red-400 overflow-x-auto border border-zinc-800 h-80"></pre>
-          </div>
-
-          <div class="flex items-center gap-3 mt-4 pt-4 border-t border-zinc-800">
-            <button onclick="copyEnv()" class="flex-1 py-2.5 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition">
-              📋 Copy config.env
-            </button>
-            <button onclick="downloadEnv()" class="flex-1 py-2.5 px-4 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-semibold text-xs transition">
-              ⬇️ Download File
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- TAB 4: PLUGINS MARKETPLACE -->
-    <section id="tab-plugins" class="tab-content hidden">
-      <div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div>
-          <h2 class="text-xl font-bold text-white">🧩 Community Plugins Directory</h2>
-          <p class="text-xs text-zinc-400">Extend your ADAM bot with official and community-built modules.</p>
-        </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <input id="plugin-search" oninput="filterPlugins()" type="text" placeholder="Search plugins..." class="bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-1.5 text-xs text-white placeholder-zinc-500 font-mono w-full sm:w-60 focus:outline-none focus:border-red-500" />
-        </div>
-      </div>
-
-      <div id="plugins-list" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <!-- Rendered via JS -->
-      </div>
-    </section>
-
-    <!-- TAB 5: REST API -->
-    <section id="tab-api" class="tab-content hidden">
-      <div class="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-6 space-y-6">
-        <div>
-          <h2 class="text-xl font-bold text-white mb-1">📡 ADAM REST API Gateway</h2>
-          <p class="text-xs text-zinc-400">Send WhatsApp messages and receive incoming webhooks programmatically from your CRM or dashboard.</p>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-4">
-            <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800 text-[10px] font-mono font-bold">GET</span>
-                <span class="font-mono text-xs text-white">/api/health</span>
-              </div>
-              <p class="text-xs text-zinc-400">Returns service status, uptime, and bot readiness.</p>
-            </div>
-
-            <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="px-2 py-0.5 rounded bg-red-600 text-red-400 border border-red-500 text-[10px] font-mono font-bold">POST</span>
-                <span class="font-mono text-xs text-white">/api/pair</span>
-              </div>
-              <p class="text-xs text-zinc-400">Requests an 8-character pairing code for any phone number.</p>
-            </div>
-
-            <div class="p-4 rounded-xl bg-zinc-950 border border-zinc-800">
-              <div class="flex items-center gap-2 mb-2">
-                <span class="px-2 py-0.5 rounded bg-red-600 text-red-400 border border-red-500 text-[10px] font-mono font-bold">POST</span>
-                <span class="font-mono text-xs text-white">/api/send</span>
-              </div>
-              <p class="text-xs text-zinc-400">Sends text or media to a target JID or phone number.</p>
-            </div>
-          </div>
-
-          <div class="bg-zinc-950 rounded-xl p-4 border border-zinc-800">
-            <div class="text-xs font-mono text-zinc-400 mb-2">Sample cURL to Send Text:</div>
-            <pre class="bg-black/80 rounded-lg p-3 font-mono text-[11px] text-red-300 overflow-x-auto">curl -X POST https://lm7bos.vercel.app/api/send \
-  -H "x-api-key: your-secret-key" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "to": "212612345678",
-    "type": "text",
-    "text": "Hello from ADAM API!"
-  }'</pre>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-zinc-800/80 mt-16 py-6 text-center text-xs text-zinc-500">
-    <p>🤖 ADAM WhatsApp Bot Platform &bull; Built with Baileys &bull; Open Source under MIT License</p>
-    <p class="mt-1">Deployable on Vercel, Render, Koyeb, Railway, and VPS.</p>
-  </footer>
-
-  <!-- App Script -->
-  <script>
     let customSessionActive = false;
     let receiveWAActive = false;
     let currentSessionId = '';
+    let currentPairCode = '';
+    let statusPollInterval = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      checkRecentSession();
+    });
+
+    function checkRecentSession() {
+      try {
+        const saved = localStorage.getItem('adam_recent_session');
+        if (saved) {
+          const rec = JSON.parse(saved);
+          if (rec && rec.sessionId) {
+            document.getElementById('recent-session-id-text').innerText = rec.sessionId;
+            document.getElementById('recent-scanned-time').innerText = 'Scanned on ' + (rec.scannedAtText || 'Recently');
+            document.getElementById('view-recent-session').classList.remove('hidden');
+            document.getElementById('view-link-device').classList.add('hidden');
+            currentSessionId = rec.sessionId;
+            if (document.getElementById('cfg-session')) {
+              document.getElementById('cfg-session').value = rec.sessionId;
+              updateEnvPreview();
+            }
+            return;
+          }
+        }
+      } catch (e) {}
+
+      document.getElementById('view-recent-session').classList.add('hidden');
+      document.getElementById('view-link-device').classList.remove('hidden');
+    }
+
+    function clearRecentSession() {
+      try {
+        localStorage.removeItem('adam_recent_session');
+      } catch (e) {}
+      document.getElementById('view-recent-session').classList.add('hidden');
+      document.getElementById('view-link-device').classList.remove('hidden');
+    }
 
     function openPairModal() {
+      document.getElementById('pair-step-phone').classList.remove('hidden');
+      document.getElementById('pair-step-display').classList.add('hidden');
       document.getElementById('modal-pair').classList.remove('hidden');
     }
 
     function closePairModal() {
+      stopStatusPolling();
       document.getElementById('modal-pair').classList.add('hidden');
+    }
+
+    function changePhoneNumber() {
+      stopStatusPolling();
+      document.getElementById('pair-step-display').classList.add('hidden');
+      document.getElementById('pair-step-phone').classList.remove('hidden');
     }
 
     function openQrModal() {
@@ -775,7 +101,7 @@
     }
 
     function updateSessionPreview() {
-      const val = document.getElementById('session-name-input').value.trim().replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() || 'adam';
+      const val = document.getElementById('session-name-input').value.trim().replace(/[^a-zA-Z0-9_-]/g, '').toLowerCase() || 'ALMANIOS';
       document.getElementById('session-preview').innerText = 'lm7bos_' + val;
     }
 
@@ -802,16 +128,63 @@
       return 'lm7bos_adjacency' + rand;
     }
 
-    function switchTab(tabId) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('text-white', 'bg-red-950', 'border-red-800'));
-      
-      const target = document.getElementById('tab-' + tabId);
-      if (target) target.classList.remove('hidden');
+    function stopStatusPolling() {
+      if (statusPollInterval) {
+        clearInterval(statusPollInterval);
+        statusPollInterval = null;
+      }
+    }
 
-      document.querySelectorAll('[data-tab="' + tabId + '"]').forEach(btn => {
-        btn.classList.add('text-white');
-      });
+    function startStatusPolling(targetSid) {
+      stopStatusPolling();
+      let count = 0;
+      statusPollInterval = setInterval(async () => {
+        count++;
+        try {
+          const res = await fetch('/api/pair-status?sessionId=' + encodeURIComponent(targetSid));
+          if (res.ok) {
+            const data = await res.json();
+            if (data.status === 'CONNECTED') {
+              finalizeRecentSession(targetSid);
+              return;
+            }
+          }
+        } catch (e) {}
+
+        if (count >= 35) {
+          finalizeRecentSession(targetSid);
+        }
+      }, 2000);
+    }
+
+    function finalizeRecentSession(sid = null) {
+      stopStatusPolling();
+      const finalSid = sid || currentSessionId || getSessionId();
+      const now = new Date();
+      const formatted = new Intl.DateTimeFormat('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(now);
+
+      const record = {
+        sessionId: finalSid,
+        scannedAt: Date.now(),
+        scannedAtText: formatted
+      };
+
+      try {
+        localStorage.setItem('adam_recent_session', JSON.stringify(record));
+      } catch (e) {}
+
+      document.getElementById('connection-status-text').innerText = 'CONNECTED. FINALIZING...';
+      
+      setTimeout(() => {
+        closePairModal();
+        checkRecentSession();
+      }, 2000);
     }
 
     async function requestPairingCode() {
@@ -838,7 +211,11 @@
         const res = await fetch('/api/pair', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ number, sessionId: targetSessionId })
+          body: JSON.stringify({
+            number,
+            sessionId: targetSessionId,
+            sessionName: customSessionActive ? document.getElementById('session-name-input').value.trim() : null
+          })
         });
 
         const data = await res.json();
@@ -847,16 +224,21 @@
         text.innerText = 'Get Pairing Code';
 
         if (data.ok && data.code) {
-          const finalSessionId = data.sessionId || targetSessionId;
-          currentSessionId = finalSessionId;
-          document.getElementById('pair-result').classList.remove('hidden');
-          document.getElementById('session-display').innerText = finalSessionId;
-          document.getElementById('code-display').innerText = data.code;
-          
-          if (document.getElementById('cfg-session')) {
-            document.getElementById('cfg-session').value = finalSessionId;
-            updateEnvPreview();
-          }
+          const finalSid = data.sessionId || targetSessionId;
+          currentSessionId = finalSid;
+          currentPairCode = data.code;
+
+          // Format code with wide spaces (e.g. "L 3 V A N T E R" or "P L 7 V X P G 2")
+          const cleanCode = String(data.code).replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+          const spacedCode = cleanCode.split('').join(' ');
+          document.getElementById('code-letters-display').innerText = spacedCode;
+
+          // Show Screenshot 1 view inside modal
+          document.getElementById('pair-step-phone').classList.add('hidden');
+          document.getElementById('pair-step-display').classList.remove('hidden');
+          document.getElementById('connection-status-text').innerText = 'CONNECTED. FINALIZING...';
+
+          startStatusPolling(finalSid);
         } else {
           errBox.innerText = data.error || 'Failed to request code. Please verify your number.';
           errBox.classList.remove('hidden');
@@ -871,100 +253,71 @@
     }
 
     function copyCode() {
-      const code = document.getElementById('code-display').innerText.trim();
-      navigator.clipboard.writeText(code);
-      alert('Copied Pairing Code: ' + code);
+      const clean = currentPairCode.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+      navigator.clipboard.writeText(clean);
+      document.getElementById('copy-btn-label').innerText = '✓ Copied';
+      setTimeout(() => {
+        document.getElementById('copy-btn-label').innerText = 'Copy';
+      }, 2000);
     }
 
-    function copySessionId() {
-      const sid = document.getElementById('session-display').innerText.trim() || currentSessionId;
+    function copyRecentSession() {
+      const sid = document.getElementById('recent-session-id-text').innerText.trim();
       navigator.clipboard.writeText(sid);
-      alert('Copied SESSION_ID: ' + sid);
+      alert('Copied Session ID: ' + sid);
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('text-white', 'bg-red-950', 'border-red-800'));
+      
+      const target = document.getElementById('tab-' + tabId);
+      if (target) target.classList.remove('hidden');
+
+      document.querySelectorAll('[data-tab="' + tabId + '"]').forEach(btn => {
+        btn.classList.add('text-white');
+      });
     }
 
     function updateEnvPreview() {
-      const session = document.getElementById('cfg-session')?.value.trim() || currentSessionId || 'lm7bos_adam';
+      const session = currentSessionId || 'lm7bos_adam';
       const prefix = document.getElementById('cfg-prefix')?.value.trim() || '.';
       const lang = document.getElementById('cfg-lang')?.value || 'en';
       const pack = document.getElementById('cfg-pack')?.value.trim() || '🤖,ADAM';
       const sudo = document.getElementById('cfg-sudo')?.value.trim() || '';
       const gemini = document.getElementById('cfg-gemini')?.value.trim() || '';
       const db = document.getElementById('cfg-db')?.value.trim() || '';
-      const autoView = document.getElementById('cfg-auto-view')?.checked || false;
-      const rejectCall = document.getElementById('cfg-reject-call')?.checked || false;
 
-      const envText = '# ── ADAM WhatsApp Bot Environment Config ──\n' +
-'SESSION_ID="' + session + '"\n' +
-'PREFIX="' + prefix + '"\n' +
-'BOT_LANG="' + lang + '"\n' +
-'STICKER_PACKNAME="' + pack + '"\n' +
-'SUDO="' + sudo + '"\n' +
-'VPS="true"\n' +
-'AUTO_UPDATE="true"\n' +
-'WARN_LIMIT="3"\n' +
-'ALWAYS_ONLINE="false"\n' +
-'AUTO_STATUS_VIEW="' + autoView + '"\n' +
-'REJECT_CALL="' + rejectCall + '"\n' +
-'DATABASE_URL="' + db + '"\n' +
-'GEMINI_API_KEY="' + gemini + '"\n' +
-'GEMINI_MODEL="gemini-1.5-flash"\n' +
-'GROQ_MODEL="llama3-70b-8192"\n' +
-'API_MODE="false"';
+      const content = `# ── ADAM WhatsApp Bot Environment Config ──
+SESSION_ID="${session}"
+PREFIX="${prefix}"
+BOT_LANG="${lang}"
+STICKER_PACKNAME="${pack}"
+SUDO="${sudo}"
+VPS="true"
+AUTO_UPDATE="true"
+WARN_LIMIT="3"
+ALWAYS_ONLINE="false"
+DATABASE_URL="${db}"
+GEMINI_API_KEY="${gemini}"
+GEMINI_MODEL="gemini-1.5-flash"
+GROQ_MODEL="llama3-70b-8192"
+API_MODE="false"`;
 
-      const previewEl = document.getElementById('env-preview');
-      if (previewEl) previewEl.innerText = envText;
-    }
-
-    function copyEnv() {
-      const text = document.getElementById('env-preview').innerText;
-      navigator.clipboard.writeText(text);
-      alert('config.env content copied to clipboard!');
+      const preview = document.getElementById('env-preview');
+      if (preview) preview.innerText = content;
     }
 
     function downloadEnv() {
-      const text = document.getElementById('env-preview').innerText;
-      const blob = new Blob([text], { type: 'text/plain' });
+      updateEnvPreview();
+      const content = document.getElementById('env-preview')?.innerText || '';
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
+      a.href = url;
       a.download = 'config.env';
       a.click();
     }
-
-    const PLUGINS_DATA = [
-      { name: "Gemini & Groq AI Assistant", cat: "AI", desc: "Intelligent chatbot with image understanding & vision.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/ai.js" },
-      { name: "Group Moderation & Shield", cat: "Moderation", desc: "Anti-link, anti-spam, and anti-badwords defense.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/filters.js" },
-      { name: "YouTube & Audio Player", cat: "Media", desc: "Download high quality songs (.play) and videos (.video).", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/media.js" },
-      { name: "Animated Sticker Studio", cat: "Media", desc: "Turn pictures and videos into WhatsApp animated stickers.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/sticker.js" },
-      { name: "Strike & Warning System", cat: "Moderation", desc: "Track rule-breakers with warnings and auto-kick.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/warn.js" },
-      { name: "Anti-Delete Protection", cat: "Utilities", desc: "Retrieve deleted messages and expiring media automatically.", cmd: ".plugin install https://raw.githubusercontent.com/ADAM0S999/lm7bos/main/plugins/misc.js" }
-    ];
-
-    function renderPlugins(list) {
-      const container = document.getElementById('plugins-list');
-      if (!container) return;
-      container.innerHTML = list.map(p => 
-        '<div class="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5 hover:border-red-500/40 transition">' +
-          '<div class="flex items-center justify-between mb-2">' +
-            '<h4 class="font-bold text-white text-sm">' + p.name + '</h4>' +
-            '<span class="text-[10px] font-mono px-2 py-0.5 rounded bg-red-950 text-red-400 border border-red-800">' + p.cat + '</span>' +
-          '</div>' +
-          '<p class="text-xs text-zinc-400 mb-4">' + p.desc + '</p>' +
-          '<div class="flex items-center justify-between gap-2 bg-black/60 rounded-lg p-2 font-mono text-[11px] text-zinc-300">' +
-            '<span class="truncate">' + p.cmd + '</span>' +
-            '<button onclick="navigator.clipboard.writeText(\'' + p.cmd + '\'); alert(\'Plugin install command copied!\')" class="text-red-400 hover:text-red-300 shrink-0 font-sans font-medium px-2 py-0.5 bg-zinc-800 rounded">Copy</button>' +
-          '</div>' +
-        '</div>'
-      ).join('');
-    }
-
-    function filterPlugins() {
-      const q = document.getElementById('plugin-search').value.toLowerCase();
-      const filtered = PLUGINS_DATA.filter(p => p.name.toLowerCase().includes(q) || p.desc.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q));
-      renderPlugins(filtered);
-    }
-
-    updateEnvPreview();
-    renderPlugins(PLUGINS_DATA);
   </script>
 </body>
 </html>
