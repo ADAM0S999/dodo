@@ -6,6 +6,7 @@
 [![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE)
 [![Version](https://img.shields.io/badge/Version-1.0.0-purple)]()
 [![Baileys](https://img.shields.io/badge/Powered%20by-Baileys-25D366?logo=whatsapp)](https://github.com/WhiskeySockets/Baileys)
+[![Co-developed with Antigravity](https://img.shields.io/badge/Co--developed%20with-Antigravity-4285F4?logo=google&logoColor=white)](https://antigravity.google)
 
 > A powerful, clean, multi-session WhatsApp bot built on [Baileys](https://github.com/WhiskeySockets/Baileys).  
 > Web Dashboard on Vercel · Pairing Code Generator · Group moderation · AI chat · Media tools · REST API
