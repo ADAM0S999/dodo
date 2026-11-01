@@ -273,6 +273,15 @@ adam-bot/
 
 ---
 
+## 👥 Contributors
+
+Thanks to the contributors who make **ADAM WhatsApp Bot** better:
+
+- **[ADAM0S999](https://github.com/ADAM0S999)** — Creator & Lead Maintainer
+- **[Antigravity](https://github.com/google-deepmind)** — AI Co-Developer & System Architecture
+
+---
+
 ## 📜 Credits
 
 - [Baileys](https://github.com/WhiskeySockets/Baileys) — WhatsApp Web API
