@@ -115,7 +115,7 @@ export default function Home() {
     pollingRef.current = setInterval(async () => {
       attempts++;
       try {
-        const res = await fetch(`/api/pair-status?sessionId=${encodeURIComponent(targetSid)}`);
+        const res = await fetch(`/api/pair?sessionId=${encodeURIComponent(targetSid)}`);
         if (res.ok) {
           const data = await res.json();
           if (data.status === 'CONNECTED') {

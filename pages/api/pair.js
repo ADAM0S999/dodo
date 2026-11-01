@@ -20,6 +20,32 @@ function generateSessionId(customName = null) {
 }
 
 export default async function handler(req, res) {
+  // ── GET: Check connection status for real-time login ──
+  if (req.method === 'GET') {
+    const { sessionId } = req.query;
+    if (!sessionId) {
+      return res.status(400).json({ error: 'sessionId is required' });
+    }
+
+    const session = global._activeSockets.get(sessionId);
+    if (!session) {
+      return res.status(200).json({
+        status: 'WAITING',
+        sessionId,
+        message: 'Waiting for WhatsApp device confirmation...'
+      });
+    }
+
+    return res.status(200).json({
+      status: session.status || 'WAITING',
+      sessionId,
+      number: session.number,
+      message: session.status === 'CONNECTED' ? 'Device connected successfully!' : 'Waiting for WhatsApp device confirmation...',
+      connectedAt: session.connectedAt || null
+    });
+  }
+
+  // ── POST: Request pairing code ──
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -88,7 +114,6 @@ export default async function handler(req, res) {
     await delay(3000);
 
     const code = await sock.requestPairingCode(number);
-    // Format code: e.g. "PL7VXPG2" -> "PL7V - XPG2" or keep continuous for spaced styling
     const cleanCode = code ? String(code).replace(/[^a-zA-Z0-9]/g, '') : '';
     const formatted = cleanCode.length === 8 
       ? `${cleanCode.slice(0, 4)} - ${cleanCode.slice(4)}`
