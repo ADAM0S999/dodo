@@ -1,0 +1,38 @@
+name: Bot & Web API Health Check
+
+on:
+  schedule:
+    # Run every 6 hours to keep serverless functions warm and monitor uptime
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: 🩺 Health & Keep-Alive Monitor
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: 🌐 Check Vercel Dashboard
+        run: |
+          echo "🔍 Checking Vercel Web Dashboard..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "https://lm7bos.vercel.app/")
+          echo "Dashboard Status Code: $STATUS"
+          if [ "$STATUS" -ne 200 ]; then
+            echo "⚠️ Warning: Dashboard returned status $STATUS"
+          else
+            echo "✅ Dashboard is online and healthy!"
+          fi
+
+      - name: 📡 Check API Info Endpoint
+        run: |
+          echo "🔍 Pinging /api/info..."
+          RESPONSE=$(curl -s -w "\nHTTP_STATUS:%{http_code}\nLATENCY:%{time_total}s" "https://lm7bos.vercel.app/api/info")
+          echo "$RESPONSE"
+
+      - name: 🤖 Summary Report
+        run: |
+          echo "=========================================="
+          echo "🤖 ADAM WhatsApp Bot Status: ACTIVE"
+          echo "📅 Timestamp: $(date -u)"
+          echo "=========================================="

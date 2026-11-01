@@ -13,6 +13,12 @@
   },
   "keywords": ["whatsapp", "bot", "baileys", "adam", "multi-session"],
   "author": "ADAM Bot Team",
+  "contributors": [
+    {
+      "name": "ADAM0S999",
+      "url": "https://github.com/ADAM0S999"
+    }
+  ],
   "license": "MIT",
   "dependencies": {
     "@whiskeysockets/baileys": "^6.7.9",

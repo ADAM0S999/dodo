@@ -1,0 +1,54 @@
+name: Release Management
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release Tag (e.g. v2.0.0)'
+        required: true
+        default: 'v2.0.0'
+
+jobs:
+  create-release:
+    name: 🚀 Create GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: 🤖 Checkout repository
+        uses: actions/checkout@v4
+
+      - name: 📋 Prepare Changelog
+        id: changelog
+        run: |
+          TAG="${{ github.event.inputs.tag_name || github.ref_name }}"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+
+      - name: 📦 Generate Release Package (ZIP)
+        run: |
+          zip -r "adam-bot-${{ steps.changelog.outputs.tag }}.zip" . \
+            -x "*.git*" \
+            -x "*node_modules*" \
+            -x "*.env"
+
+      - name: 🚀 Publish Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.changelog.outputs.tag }}
+          name: "🤖 ADAM WhatsApp Bot ${{ steps.changelog.outputs.tag }}"
+          draft: false
+          prerelease: false
+          files: adam-bot-*.zip
+          body: |
+            ### 🤖 What's New in ADAM WhatsApp Bot ${{ steps.changelog.outputs.tag }}
+            
+            - 🔑 **Multi-Device Session & Pairing**: Custom and Random session generation (`lm7bos_adjacency...` & `lm7bos_custom`)
+            - 🌐 **Vercel Web Dashboard**: Dark red modern UI with Pairing Code and QR Code modals
+            - 🧩 **Extensible Plugins Architecture**: Rich media, group moderation, and AI chat integrations
+            - 🚀 **1-Click Cloud Deployments**: Ready for Vercel, Render, Koyeb, Railway, and Docker VPS
+            
+            *Maintained by @ADAM0S999.*
